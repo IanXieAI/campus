@@ -1,0 +1,2367 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UIBE CampusSafe - 对外经济贸易大学安全巡检系统</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/alpinejs@3.13.8/dist/cdn.min.js" defer></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Poppins:wght@400;500;600;700&family=Noto+Sans+SC:wght@300;400;500;700&display=swap');
+        
+        /* 对外经济贸易大学品牌色彩 */
+        :root {
+            --uibe-primary: #00205B;    /* 对外经贸标准深蓝 */
+            --uibe-secondary: #0056B3;   /* 辅助蓝色 */
+            --uibe-accent: #E63946;     /* 用于警示的红色 */
+            --uibe-light: #F8FAFF;      /* 浅色背景 */
+            --uibe-warning: #FFB81C;    /* 黄色警示 */
+            --uibe-success: #00A859;    /* 成功绿色 */
+            --uibe-gray: #4A5568;       /* 中性灰 */
+        }
+        
+        * { font-family: 'Noto Sans SC', 'Inter', sans-serif; }
+        
+        body {
+            background: linear-gradient(135deg, var(--uibe-light) 0%, #E6EEFF 100%);
+            min-height: 100vh;
+            color: #2D3748;
+            margin: 0;
+            padding: 0;
+        }
+
+        /* 定制化卡片设计 - 深蓝色主题 */
+        .uibe-card {
+            background: linear-gradient(145deg, rgba(255, 255, 255, 0.95), rgba(248, 250, 255, 0.98));
+            backdrop-filter: blur(30px);
+            border-radius: 20px;
+            border: 1px solid rgba(0, 32, 91, 0.15);
+            box-shadow: 
+                0 15px 35px rgba(0, 32, 91, 0.12),
+                0 5px 15px rgba(0, 32, 91, 0.08),
+                inset 0 1px 0 rgba(255, 255, 255, 0.8);
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.1);
+        }
+
+        .uibe-card:hover {
+            transform: translateY(-8px);
+            border-color: rgba(0, 32, 91, 0.25);
+            box-shadow: 
+                0 25px 50px rgba(0, 32, 91, 0.18),
+                0 10px 25px rgba(0, 32, 91, 0.12),
+                inset 0 1px 0 rgba(255, 255, 255, 0.9);
+        }
+
+        .uibe-primary-btn {
+            background: linear-gradient(135deg, var(--uibe-primary) 0%, #003D8F 100%);
+            color: white;
+            font-weight: 600;
+            border-radius: 16px;
+            padding: 15px 36px;
+            border: none;
+            box-shadow: 0 15px 30px rgba(0, 32, 91, 0.25);
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.1);
+            cursor: pointer;
+        }
+
+        .uibe-primary-btn:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 25px 45px rgba(0, 32, 91, 0.35);
+            background: linear-gradient(135deg, #003D8F 0%, #00205B 100%);
+        }
+
+        /* 学校logo样式 */
+        .uibe-logo {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 8px 16px;
+            background: linear-gradient(135deg, var(--uibe-primary) 0%, #003D8F 100%);
+            color: white;
+            border-radius: 12px;
+            font-weight: 700;
+            font-size: 16px;
+            box-shadow: 0 8px 20px rgba(0, 32, 91, 0.2);
+        }
+
+        /* 悬浮效果 */
+        .uibe-hover-effect {
+            transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.1);
+            cursor: pointer;
+        }
+
+        .uibe-hover-effect:hover {
+            transform: scale(1.07) translateY(-4px);
+        }
+
+        /* 浮动动画 */
+        @keyframes uibe-float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-12px); }
+        }
+
+        .uibe-float-animation {
+            animation: uibe-float 6s ease-in-out infinite;
+        }
+
+        /* 渐变文本 */
+        .uibe-gradient-text {
+            background: linear-gradient(135deg, var(--uibe-primary) 0%, var(--uibe-secondary) 70%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        /* 页面切换动画 */
+        .uibe-page-transition {
+            animation: uibe-fadeIn 0.5s ease-out;
+        }
+
+        @keyframes uibe-fadeIn {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* 顶部导航 - 专业学校Banner */
+        .uibe-top-nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 100;
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.98) 0%, rgba(248, 250, 255, 0.99) 100%);
+            backdrop-filter: blur(20px);
+            border-bottom: 2px solid rgba(0, 32, 91, 0.1);
+            box-shadow: 0 4px 30px rgba(0, 32, 91, 0.15);
+        }
+        
+        .uibe-top-nav::before {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, var(--uibe-primary) 0%, var(--uibe-secondary) 50%, var(--uibe-primary) 100%);
+        }
+
+        /* 底部导航 */
+        .uibe-bottom-nav {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 50;
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(30px);
+            border-radius: 18px;
+            border: 1px solid rgba(0, 32, 91, 0.12);
+            box-shadow: 0 12px 30px rgba(0, 32, 91, 0.15);
+        }
+
+        /* 输入框样式 */
+        .uibe-input {
+            background: rgba(255, 255, 255, 0.9);
+            border: 1px solid rgba(0, 32, 91, 0.15);
+            border-radius: 14px;
+            padding: 16px;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        .uibe-input:focus {
+            outline: none;
+            border-color: var(--uibe-primary);
+            box-shadow: 0 0 0 3px rgba(0, 32, 91, 0.12);
+        }
+
+        /* 辅助类 */
+        button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .text-center { text-align: center; }
+        .text-left { text-align: left; }
+        .mx-auto { margin-left: auto; margin-right: auto; }
+        .px-4 { padding-left: 1rem; padding-right: 1rem; }
+    </style>
+</head>
+<body x-data="appState" x-init="init()" class="uibe-page-transition">
+    
+    <!-- 固定顶部栏已移动到登录页面下方 -->
+    
+    <!-- 对外经济贸易大学专业Banner条 -->
+    <div class="uibe-top-nav py-3 px-4">
+        <div class="max-w-7xl mx-auto">
+            <div class="flex items-center justify-between">
+                <!-- 学校Logo和名称 -->
+                <div class="flex items-center gap-4">
+                    <div class="flex items-center gap-3">
+                        <!-- 学校Logo样式 -->
+                        <div class="flex items-center justify-center bg-gradient-to-br from-uibe-primary to-uibe-secondary rounded-xl p-2 shadow-lg">
+                            <div class="text-white font-bold text-2xl tracking-wider">
+                                <span class="text-xs block text-center opacity-90">UIBE</span>
+                                <span class="text-lg">🏛️</span>
+                            </div>
+                        </div>
+                        
+                        <!-- 学校名称 -->
+                        <div class="hidden md:block">
+                            <div class="text-uibe-primary font-bold text-xl tracking-wide">
+                                对外经济贸易大学
+                            </div>
+                            <div class="text-xs text-gray-600 tracking-widest">
+                                UNIVERSITY OF INTERNATIONAL BUSINESS AND ECONOMICS
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- 系统名称 -->
+                    <div class="hidden sm:flex items-center gap-2 ml-6 pl-6 border-l-2 border-gray-200">
+                        <div class="h-8 w-1 bg-uibe-primary rounded-full"></div>
+                        <div>
+                            <div class="text-uibe-primary font-semibold text-base">
+                                安全巡检系统
+                            </div>
+                            <div class="text-xs text-gray-500">
+                                Campus Safety Inspection System
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 用户信息 -->
+                <div class="flex items-center gap-3">
+                    <div class="text-right hidden sm:block">
+                        <div class="text-sm text-uibe-gray flex items-center justify-end gap-2">
+                            <i class="fas fa-user-circle text-lg"></i>
+                            <span class="font-medium" x-text="isAuthenticated ? (currentUser?.name || '已登录') : '未登录'"></span>
+                        </div>
+                        <template x-if="isAuthenticated">
+                            <div class="text-xs">
+                                <span :class="isAdmin ? 'uibe-admin-badge uibe-role-badge' : 'uibe-inspector-badge uibe-role-badge'">
+                                    <span x-text="isAdmin ? '管理员' : '巡检员'"></span>
+                                </span>
+                            </div>
+                        </template>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 登录页面 -->
+    <div x-show="currentPage === 'login'" x-cloak class="pt-28 pb-32 px-4">
+        <div class="max-w-md mx-auto">
+            <div class="mb-10 text-center">
+                <h1 class="text-5xl font-bold mb-4 uibe-gradient-text">UIBE CampusSafe</h1>
+                <p class="text-xl text-uibe-gray mb-2">对外经济贸易大学 安全巡检系统</p>
+                <p class="text-sm text-gray-500">保卫处专用 | 多校区协同 | AI智能识别</p>
+            </div>
+            
+            <div class="uibe-card p-8 mb-6">
+                <h2 class="text-2xl font-bold mb-6 text-center text-uibe-primary">账号登录</h2>
+                
+                <!-- 微信登录 -->
+                <button @click="simulateWechatLogin()"
+                        class="w-full uibe-card p-5 mb-6 uibe-hover-effect flex items-center justify-center gap-4 cursor-pointer">
+                    <i class="fab fa-weixin text-4xl text-green-500"></i>
+                    <div class="text-left">
+                        <div class="font-semibold text-lg">微信一键登录</div>
+                        <div class="text-sm text-gray-500">使用企业微信扫码登录</div>
+                    </div>
+                </button>
+                
+                <!-- 手机登录 -->
+                <div class="mb-8">
+                    <label class="block text-uibe-primary font-semibold mb-2">保卫处工作手机号</label>
+                    <input type="tel" 
+                           x-model="loginForm.phone"
+                           placeholder="请输入11位工作手机号"
+                           class="w-full uibe-input mb-4">
+                    
+                    <div class="flex gap-3">
+                        <input type="text" 
+                               x-model="loginForm.code"
+                               placeholder="请输入验证码"
+                               class="flex-1 uibe-input">
+                        <button @click="sendVerificationCode()" 
+                                :disabled="isVerifyingCode"
+                                :class="isVerifyingCode ? 'bg-gray-300' : 'bg-uibe-primary hover:bg-blue-800'"
+                                class="px-5 py-4 text-white font-semibold rounded-2xl transition-colors cursor-pointer">
+                            <span x-show="!isVerifyingCode">获取验证码</span>
+                            <span x-show="isVerifyingCode">发送中...</span>
+                        </button>
+                    </div>
+                    
+                    <div class="mt-3 text-xs text-uibe-gray flex items-center gap-2">
+                        <i class="fas fa-info-circle"></i>
+                        演示系统验证码：<span class="font-mono font-bold">123456</span> | 首次登录自动注册
+                    </div>
+                </div>
+                
+                <button @click="loginWithCode()" 
+                        class="w-full uibe-primary-btn py-5 text-lg flex items-center justify-center gap-3 cursor-pointer">
+                    <i class="fas fa-sign-in-alt text-xl"></i>
+                    登录系统 / 首次注册
+                </button>
+                
+                <div class="mt-6 pt-6 border-t border-gray-200 text-center text-sm text-gray-500">
+                    <p>推荐使用手机号：13800138888（管理员账户）</p>
+                    <p>或 13800138001（巡检员账户）体验不同功能</p>
+                </div>
+            </div>
+            
+            <!-- 演示说明 -->
+            <div class="uibe-card p-6">
+                <h3 class="font-bold text-uibe-primary mb-3">演示说明</h3>
+                <ul class="text-sm text-gray-600 space-y-2">
+                    <li>• 使用上述手机号登录（验证码固定为 123456）</li>
+                    <li>• 登录后自动跳转到对应角色界面</li>
+                    <li>• 巡检员：使用完整的安全巡检功能</li>
+                    <li>• 管理员：管理用户、功能开关、查看报表</li>
+                    <li>• 右上角可随时切换登录/退出状态</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 巡检员首页 -->
+    <div x-show="currentPage === 'inspector-home'" x-cloak class="pt-28 pb-32 px-4">
+        <div class="max-w-lg mx-auto">
+            <div class="mb-8">
+                <div class="uibe-card p-8">
+                    <div class="flex justify-between items-start mb-6">
+                        <div>
+                            <h1 class="text-3xl font-bold mb-2 uibe-gradient-text">安全巡检工作台</h1>
+                            <p class="text-uibe-gray">保卫处 | <span x-text="currentUser?.campus || '望京校区'"></span></p>
+                        </div>
+                        <div class="uibe-inspector-badge uibe-role-badge">
+                            <i class="fas fa-shield-alt mr-1"></i>
+                            <span>巡检员</span>
+                        </div>
+                    </div>
+                    
+                    <div class="flex items-center gap-4 p-4 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-2xl mb-6">
+                        <div class="w-16 h-16 bg-gradient-to-br from-uibe-primary to-uibe-secondary rounded-full flex items-center justify-center shadow-lg relative">
+                            <span class="text-3xl font-bold text-white" x-text="currentUser?.name?.charAt(0) || '保'"></span>
+                            <div class="absolute -bottom-1 -right-1 bg-white border-2 border-white rounded-full w-8 h-8 flex items-center justify-center shadow-sm">
+                                <i class="fas fa-user text-xs text-uibe-primary"></i>
+                            </div>
+                        </div>
+                        <div>
+                            <div class="font-bold text-xl" x-text="currentUser?.name || '巡检员'"></div>
+                            <div class="text-sm text-uibe-gray">所属：<span x-text="currentUser?.department || '保卫处'"></span></div>
+                            <div class="text-xs text-uibe-gray mt-1">ID: <span class="font-mono" x-text="'UIBE' + (currentUser?.id?.toString().padStart(3, '0') || '001')"></span></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 开始巡检CTA -->
+            <button @click="navigateTo('inspector-input')"
+                    class="w-full uibe-primary-btn py-6 rounded-2xl flex items-center justify-center gap-4 uibe-float-animation mb-6 cursor-pointer shadow-2xl">
+                <div class="w-14 h-14 bg-white/20 rounded-full flex items-center justify-center">
+                    <i class="fas fa-play-circle text-3xl text-white"></i>
+                </div>
+                <div class="text-left flex-1">
+                    <div class="text-2xl font-bold text-white">开始巡查任务</div>
+                    <div class="text-sm text-white/90 flex items-center gap-2">
+                        <span>🎤 语音输入</span>
+                        <span class="text-white/30">|</span>
+                        <span>🤖 AI识别</span>
+                        <span class="text-white/30">|</span>
+                        <span>📍 定位上报</span>
+                    </div>
+                </div>
+                <i class="fas fa-arrow-right text-2xl text-white"></i>
+            </button>
+
+            <!-- 新增巡查按钮 -->
+            <button @click="navigateTo('inspector-input')"
+                    class="w-full bg-white border-2 border-uibe-primary py-4 rounded-xl flex items-center justify-center gap-3 hover:bg-blue-50 transition-all cursor-pointer mb-6">
+                <i class="fas fa-plus-circle text-2xl text-uibe-primary"></i>
+                <div class="font-bold text-uibe-primary text-lg">新增巡查记录</div>
+            </button>
+            
+            <!-- 今日统计 -->
+            <div class="uibe-card p-6 mb-6">
+                <h2 class="text-xl font-bold mb-4 flex items-center gap-2">
+                    <i class="fas fa-chart-bar text-uibe-primary"></i>
+                    <span>校区安全统计</span>
+                </h2>
+                
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="p-4 bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl">
+                        <div class="text-sm text-uibe-primary mb-1">总巡查次数</div>
+                        <div class="text-3xl font-bold text-uibe-primary" x-text="campusStats.totalInspections"></div>
+                    </div>
+                    <div class="p-4 bg-gradient-to-br from-orange-50 to-red-50 rounded-xl">
+                        <div class="text-sm text-orange-600 mb-1">待处理隐患</div>
+                        <div class="text-3xl font-bold text-red-600" x-text="campusStats.pendingIssues"></div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 功能入口 -->
+            <div class="uibe-card p-6">
+                <h2 class="text-xl font-bold mb-4 flex items-center gap-2">
+                    <i class="fas fa-th-large text-uibe-primary"></i>
+                    <span>功能入口</span>
+                </h2>
+                
+                <div class="grid grid-cols-2 gap-4">
+                    <button @click="navigateTo('inspector-records')"
+                            class="uibe-card p-4 flex flex-col items-center uibe-hover-effect cursor-pointer">
+                        <i class="fas fa-clipboard-list text-3xl text-uibe-primary mb-3"></i>
+                        <span class="font-semibold">巡查记录</span>
+                    </button>
+                    <button @click="navigateTo('inspector-hazards')"
+                            class="uibe-card p-4 flex flex-col items-center uibe-hover-effect cursor-pointer">
+                        <i class="fas fa-exclamation-triangle text-3xl text-red-500 mb-3"></i>
+                        <span class="font-semibold">隐患清单</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 输入页面 -->
+    <div x-show="currentPage === 'inspector-input'" x-cloak class="pt-28 pb-32 px-4">
+        <div class="max-w-lg mx-auto">
+            <div class="uibe-card p-6">
+                <div class="flex items-center gap-4 mb-6">
+                    <button @click="navigateTo('inspector-home')"
+                            class="p-2 rounded-lg hover:bg-gray-100 cursor-pointer">
+                        <i class="fas fa-arrow-left text-xl"></i>
+                    </button>
+                    <div class="flex-1">
+                        <h2 class="text-2xl font-bold text-uibe-primary">巡查记录上报</h2>
+                        <p class="text-sm text-uibe-gray">支持语音输入、AI智能识别</p>
+                    </div>
+                    <div class="bg-green-100 text-green-700 px-3 py-1 rounded-full text-xs font-semibold">
+                        <i class="fas fa-microphone mr-1"></i>
+                        语音已启用
+                    </div>
+                </div>
+                
+                <!-- 沉浸式语音输入界面 -->
+                <div class="mb-6" x-show="featureFlags.voiceInput || true">
+                    <label class="block text-lg font-semibold text-uibe-primary mb-4">
+                        <i class="fas fa-microphone mr-2"></i>
+                        语音巡查录入
+                    </label>
+
+                    <!-- 浏览器支持提示 -->
+                    <div x-show="!isRecognitionSupported" class="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+                        <div class="flex items-start gap-2">
+                            <i class="fas fa-exclamation-triangle text-yellow-600 mt-1"></i>
+                            <div class="text-sm text-yellow-800">
+                                <div class="font-semibold mb-1">您的浏览器不支持语音识别</div>
+                                <div>请使用Chrome或Edge浏览器，或直接手动输入。如需使用语音功能，请确保已授予麦克风权限。</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 圆形录音按钮 -->
+                    <div class="flex flex-col items-center justify-center mb-6">
+                        <button @click="toggleVoiceInput()"
+                                :style="isRecording ? 'background: linear-gradient(135deg, #EF4444 0%, #DC2626 100%); box-shadow: 0 20px 60px rgba(239, 68, 68, 0.5);' : 'background: linear-gradient(135deg, #00205B 0%, #003D8F 100%); box-shadow: 0 20px 60px rgba(0, 32, 91, 0.4);'"
+                                :class="isRecording ? 'animate-pulse' : ''"
+                                class="w-28 h-28 rounded-full flex items-center justify-center transition-all duration-300 cursor-pointer z-10 hover:scale-110 active:scale-95"
+                                style="pointer-events: auto;">
+                            <i :class="isRecording ? 'fas fa-stop text-4xl' : 'fas fa-microphone text-5xl'" class="text-white"></i>
+                        </button>
+                        <div class="mt-4 text-center">
+                            <div class="text-lg font-semibold" x-text="isRecording ? '点击停止录音' : '点击开始录音'"></div>
+                            <div class="text-sm text-gray-500 mt-1" x-text="isRecording ? '正在收集中...' : '系统将自动识别'"></div>
+                        </div>
+                    </div>
+
+                    <!-- 录音波纹动画 -->
+                    <div x-show="isRecording" x-transition:enter="transition ease-out duration-300"
+                         x-transition:enter-start="opacity-0 transform scale-50"
+                         x-transition:enter-end="opacity-100 transform scale-100"
+                         x-transition:leave="transition ease-in duration-200"
+                         x-transition:leave-start="opacity-100 transform scale-100"
+                         x-transition:leave-end="opacity-0 transform scale-50"
+                         class="flex items-center justify-center mb-6">
+                        <div class="flex gap-1">
+                            <div class="w-2 h-8 bg-red-400 rounded-full animate-bounce" style="animation-delay: 0ms;"></div>
+                            <div class="w-2 h-12 bg-red-500 rounded-full animate-bounce" style="animation-delay: 150ms;"></div>
+                            <div class="w-2 h-16 bg-red-600 rounded-full animate-bounce" style="animation-delay: 300ms;"></div>
+                            <div class="w-2 h-12 bg-red-500 rounded-full animate-bounce" style="animation-delay: 150ms;"></div>
+                            <div class="w-2 h-8 bg-red-400 rounded-full animate-bounce" style="animation-delay: 0ms;"></div>
+                        </div>
+                    </div>
+
+                    <!-- 文本显示区域 -->
+                    <div class="mb-4">
+                        <textarea x-model="aiInput"
+                                  @input="updateWordCount()"
+                                  rows="4"
+                                  class="w-full uibe-input"
+                                  placeholder="录音内容将自动显示在这里...也可以直接手动输入"></textarea>
+                        <div class="flex justify-between items-center mt-2">
+                            <div class="text-xs text-gray-500" x-show="wordCount > 0">
+                                字数: <span x-text="wordCount"></span>
+                            </div>
+                            <button @click="aiInput = ''; wordCount = 0; aiResult = null;"
+                                    x-show="aiInput.trim()"
+                                    class="text-sm text-red-500 hover:text-red-700 font-medium">
+                                <i class="fas fa-redo mr-1"></i>
+                                重新录制
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- AI识别结果卡片（沉浸式显示） -->
+                    <div x-show="aiResult" x-transition:enter="transition ease-out duration-500"
+                         x-transition:enter-start="opacity-0 transform translate-y-4"
+                         x-transition:enter-end="opacity-100 transform translate-y-0"
+                         x-transition:leave="transition ease-in duration-300"
+                         x-transition:leave-start="opacity-100 transform translate-y-0"
+                         x-transition:leave-end="opacity-0 transform translate-y-4"
+                         class="uibe-card p-6 bg-gradient-to-br from-blue-50 to-indigo-50 border-blue-200">
+                        <div class="flex items-center justify-between mb-4">
+                            <h3 class="font-bold text-lg text-uibe-primary">
+                                <i class="fas fa-robot mr-2"></i>
+                                AI智能识别结果
+                            </h3>
+                            <span class="px-3 py-1 rounded-full text-xs font-semibold"
+                                  :class="aiResult.result === '正常' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'">
+                                <i :class="aiResult.result === '正常' ? 'fas fa-check-circle' : 'fas fa-exclamation-triangle'" class="mr-1"></i>
+                                <span x-text="aiResult.result"></span>
+                            </span>
+                        </div>
+
+                        <!-- 位置验证（如果启用） -->
+                        <div x-show="featureFlags.locationTracking" class="mb-4 p-3 rounded-lg border-2"
+                             :class="locationMatchStatus === 'matched' ? 'border-green-500 bg-green-50' :
+                                     locationMatchStatus === 'mismatched' ? 'border-red-500 bg-red-50' :
+                                     'border-yellow-500 bg-yellow-50'">
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center gap-2">
+                                    <i :class="locationMatchStatus === 'matched' ? 'fas fa-check-circle text-green-600' :
+                                               locationMatchStatus === 'mismatched' ? 'fas fa-times-circle text-red-600' :
+                                               'fas fa-map-marker-alt text-yellow-600'"></i>
+                                    <span class="text-sm font-semibold" x-text="locationMatchStatus === 'matched' ? '位置验证成功' :
+                                                       locationMatchStatus === 'mismatched' ? '位置不匹配' :
+                                                       '等待验证位置'"></span>
+                                </div>
+                                <button @click="verifyLocation()"
+                                        :style="locationVerified ? '' : 'background: linear-gradient(135deg, #00205B 0%, #003D8F 100%);'"
+                                        :class="locationVerified ? 'bg-gray-300 cursor-not-allowed' : 'hover:opacity-90'"
+                                        :disabled="locationVerified"
+                                        class="px-3 py-1 text-white text-xs font-semibold rounded-lg transition-colors">
+                                    <i class="fas fa-location-arrow mr-1"></i>
+                                    <span x-text="locationVerified ? '已验证' : '验证'"></span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-3 mb-4">
+                            <div class="bg-white rounded-lg p-3 shadow-sm">
+                                <div class="text-xs text-gray-500 mb-1">校区</div>
+                                <div class="font-semibold text-uibe-primary" x-text="aiResult.campus"></div>
+                            </div>
+                            <div class="bg-white rounded-lg p-3 shadow-sm">
+                                <div class="text-xs text-gray-500 mb-1">地点</div>
+                                <div class="font-semibold text-uibe-primary" x-text="aiResult.location"></div>
+                            </div>
+                        </div>
+
+                        <div x-show="aiResult.result !== '正常'" class="bg-white rounded-lg p-3 shadow-sm mb-4">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <div class="text-xs text-gray-500 mb-1">隐患类型</div>
+                                    <div class="font-semibold text-gray-800" x-text="aiResult.issue"></div>
+                                </div>
+                                <div class="px-3 py-1 rounded-full text-xs font-bold"
+                                     :class="{
+                                         'bg-red-100 text-red-700': aiResult.severity === 'high',
+                                         'bg-yellow-100 text-yellow-700': aiResult.severity === 'medium',
+                                         'bg-green-100 text-green-700': aiResult.severity === 'low'
+                                     }">
+                                    <span x-text="{
+                                        'high': '高危',
+                                        'medium': '中等',
+                                        'low': '轻微'
+                                    }[aiResult.severity]"></span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <button @click="confirmInspection()"
+                                :disabled="featureFlags.locationTracking && !locationVerified"
+                                :class="featureFlags.locationTracking && !locationVerified ? 'bg-gray-400 cursor-not-allowed' : ''"
+                                class="w-full py-4 text-white font-semibold rounded-xl transition-all hover:shadow-lg transform hover:-translate-y-1"
+                                style="background: linear-gradient(135deg, #00205B 0%, #003D8F 100%);">
+                            <i class="fas fa-check-circle mr-2"></i>
+                            <span x-text="featureFlags.locationTracking ? '验证通过后确认上报' : '确认上报'"></span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 管理员页面 -->
+    <div x-show="currentPage === 'admin-dashboard'" x-cloak class="pt-28 pb-32 px-4">
+        <div class="max-w-lg mx-auto">
+            <div class="mb-8">
+                <div class="uibe-card p-8">
+                    <div class="flex justify-between items-start mb-6">
+                        <div>
+                            <h1 class="text-3xl font-bold mb-2 uibe-gradient-text">管理员控制台</h1>
+                            <p class="text-uibe-gray">信息化办公室 | 系统管理员</p>
+                        </div>
+                        <div class="uibe-admin-badge uibe-role-badge">
+                            <i class="fas fa-crown mr-1"></i>
+                            <span>系统管理员</span>
+                        </div>
+                    </div>
+                    
+                    <div class="space-y-4">
+                        <button @click="navigateTo('admin-locations')"
+                                class="w-full uibe-card p-5 flex items-center justify-between hover:bg-blue-50 cursor-pointer">
+                            <div class="flex items-center gap-4">
+                                <i class="fas fa-map-marker-alt text-3xl text-red-500"></i>
+                                <div class="text-left">
+                                    <div class="font-bold text-lg">巡查地点维护</div>
+                                    <div class="text-sm text-gray-500">管理校园预设巡检定位点</div>
+                                </div>
+                            </div>
+                            <i class="fas fa-arrow-right text-gray-400"></i>
+                        </button>
+                        
+                        <button @click="navigateTo('admin-users')"
+                                class="w-full uibe-card p-5 flex items-center justify-between hover:bg-blue-50 cursor-pointer">
+                            <div class="flex items-center gap-4">
+                                <i class="fas fa-users text-3xl text-uibe-primary"></i>
+                                <div class="text-left">
+                                    <div class="font-bold text-lg">用户管理</div>
+                                    <div class="text-sm text-gray-500">管理所有巡检员和系统用户</div>
+                                </div>
+                            </div>
+                            <i class="fas fa-arrow-right text-gray-400"></i>
+                        </button>
+                        
+                        <button @click="navigateTo('admin-features')"
+                                class="w-full uibe-card p-5 flex items-center justify-between hover:bg-blue-50 cursor-pointer">
+                            <div class="flex items-center gap-4">
+                                <i class="fas fa-sliders-h text-3xl text-green-500"></i>
+                                <div class="text-left">
+                                    <div class="font-bold text-lg">功能管理</div>
+                                    <div class="text-sm text-gray-500">配置巡检模块功能开关</div>
+                                </div>
+                            </div>
+                            <i class="fas fa-arrow-right text-gray-400"></i>
+                        </button>
+                        
+                        <button @click="navigateTo('admin-reports')"
+                                class="w-full uibe-card p-5 flex items-center justify-between hover:bg-blue-50 cursor-pointer">
+                            <div class="flex items-center gap-4">
+                                <i class="fas fa-chart-line text-3xl text-purple-500"></i>
+                                <div class="text-left">
+                                    <div class="font-bold text-lg">数据报表</div>
+                                    <div class="text-sm text-gray-500">查看全量数据统计报表</div>
+                                </div>
+                            </div>
+                            <i class="fas fa-arrow-right text-gray-400"></i>
+                        </button>
+                    </div>
+                    
+                    <div class="mt-8 pt-6 border-t border-gray-200">
+                        <button @click="logout()" 
+                                class="w-full bg-red-100 hover:bg-red-200 text-red-700 font-semibold py-4 rounded-xl transition-colors cursor-pointer">
+                            <i class="fas fa-sign-out-alt mr-2"></i>
+                            退出管理员账户
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- AI结果页面 -->
+    <div x-show="currentPage === 'ai-result'" x-cloak class="pt-28 pb-32 px-4">
+        <div class="max-w-lg mx-auto">
+            <div class="uibe-card p-6">
+                <div class="flex items-center gap-4 mb-6">
+                    <button @click="navigateTo('inspector-input')"
+                            class="p-2 rounded-lg hover:bg-gray-100 cursor-pointer">
+                        <i class="fas fa-arrow-left text-xl"></i>
+                    </button>
+                    <h2 class="text-2xl font-bold text-uibe-primary">AI识别结果</h2>
+                </div>
+                
+                <template x-if="aiResult">
+                    <div class="space-y-6">
+                        <!-- 定位验证部分 -->
+                        <div x-show="featureFlags.locationTracking" class="p-4 border-2 rounded-xl"
+                             :class="locationMatchStatus === 'matched' ? 'border-green-500 bg-green-50' : 
+                                     locationMatchStatus === 'mismatched' ? 'border-red-500 bg-red-50' : 
+                                     'border-yellow-500 bg-yellow-50'">
+                            <div class="flex items-center justify-between mb-2">
+                                <h4 class="font-bold text-lg flex items-center gap-2">
+                                    <i :class="locationMatchStatus === 'matched' ? 'fas fa-check-circle text-green-600' : 
+                                               locationMatchStatus === 'mismatched' ? 'fas fa-times-circle text-red-600' : 
+                                               'fas fa-map-marker-alt text-yellow-600'"></i>
+                                    位置验证
+                                </h4>
+                                <button @click="verifyLocation()"
+                                        :style="locationVerified ? '' : 'background: linear-gradient(135deg, #00205B 0%, #003D8F 100%);'"
+                                        :class="locationVerified ? 'bg-gray-200 cursor-not-allowed' : 'hover:opacity-90'"
+                                        :disabled="locationVerified"
+                                        class="px-3 py-1 text-white text-sm font-semibold rounded-lg transition-colors">
+                                    <i class="fas fa-location-arrow mr-1"></i>
+                                    <span x-text="locationVerified ? '已验证' : '验证位置'"></span>
+                                </button>
+                            </div>
+                            <div class="text-sm" :class="locationMatchStatus === 'matched' ? 'text-green-700' : 
+                                                       locationMatchStatus === 'mismatched' ? 'text-red-700' : 
+                                                       'text-yellow-700'">
+                                <span x-text="locationMatchStatus === 'matched' ? '位置验证成功！您的实际位置与口述地点匹配' : 
+                                          locationMatchStatus === 'mismatched' ? '位置不匹配！请确认您当前的实际位置' : 
+                                          '请点击验证按钮，系统将检查您的实际位置与口述地点'"></span>
+                            </div>
+                        </div>
+                        
+                        <div class="grid grid-cols-2 gap-4">
+                            <div class="p-4 bg-blue-50 rounded-xl">
+                                <div class="text-sm text-blue-600 mb-1">校区</div>
+                                <div class="text-xl font-bold" x-text="aiResult.campus"></div>
+                            </div>
+                            <div class="p-4 bg-indigo-50 rounded-xl">
+                                <div class="text-sm text-indigo-600 mb-1">地点</div>
+                                <div class="text-xl font-bold" x-text="aiResult.location"></div>
+                            </div>
+                            <div class="p-4 bg-green-50 rounded-xl">
+                                <div class="text-sm text-green-600 mb-1">检查结果</div>
+                                <div class="text-xl font-bold" :class="aiResult.result === '异常' ? 'text-red-600' : 'text-green-600'" 
+                                      x-text="aiResult.result"></div>
+                            </div>
+                            <div class="p-4 bg-orange-50 rounded-xl">
+                                <div class="text-sm text-orange-600 mb-1">问题类型</div>
+                                <div class="text-xl font-bold" x-text="aiResult.issue || '正常'"></div>
+                            </div>
+                        </div>
+                        
+                        <button @click="confirmInspection()"
+                                :disabled="featureFlags.locationTracking && !locationVerified"
+                                :class="featureFlags.locationTracking && !locationVerified ? 'bg-gray-400 cursor-not-allowed' : 'bg-uibe-primary hover:bg-blue-800'"
+                                class="w-full py-5 text-white text-lg font-semibold rounded-2xl transition-colors">
+                            <i class="fas fa-check-circle mr-2"></i>
+                            <span x-text="featureFlags.locationTracking ? '验证通过后确认记录' : '确认并记录本次巡检'"></span>
+                        </button>
+                        
+                        <button @click="navigateTo('inspector-input')"
+                                class="w-full bg-gray-100 hover:bg-gray-200 py-5 text-lg font-semibold rounded-2xl transition-colors cursor-pointer">
+                            返回重新输入
+                        </button>
+                    </div>
+                </template>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 管理员地点维护页面 -->
+    <div x-show="currentPage === 'admin-locations'" x-cloak class="pt-28 pb-32 px-4">
+        <div class="max-w-4xl mx-auto">
+            <div class="uibe-card p-8 mb-6">
+                <div class="flex items-center justify-between mb-6">
+                    <div class="flex items-center gap-4">
+                        <button @click="navigateTo('admin-dashboard')"
+                                class="p-2 rounded-lg hover:bg-gray-100 cursor-pointer">
+                            <i class="fas fa-arrow-left text-xl"></i>
+                        </button>
+                        <h2 class="text-2xl font-bold text-uibe-primary">巡查地点维护</h2>
+                    </div>
+                    <select x-model="locationFilter" @change="filterLocations()" 
+                            class="px-4 py-2 bg-white border-2 border-gray-200 rounded-xl font-semibold text-uibe-primary focus:border-uibe-primary focus:outline-none cursor-pointer">
+                        <option value="all">全部校区</option>
+                        <option value="望京校区">望京校区</option>
+                        <option value="和平里校区">和平里校区</option>
+                    </select>
+                </div>
+
+                <!-- 统计信息 -->
+                <div class="grid grid-cols-4 gap-4 mb-8">
+                    <div class="p-4 bg-blue-50 rounded-xl text-center">
+                        <div class="text-2xl font-bold text-uibe-primary" x-text="campusLocations.length"></div>
+                        <div class="text-sm text-uibe-primary">总地点数</div>
+                    </div>
+                    <div class="p-4 bg-green-50 rounded-xl text-center">
+                        <div class="text-2xl font-bold text-green-600" x-text="campusLocations.filter(l => l.campus === '望京校区').length"></div>
+                        <div class="text-sm text-green-600">望京校区</div>
+                    </div>
+                    <div class="p-4 bg-orange-50 rounded-xl text-center">
+                        <div class="text-2xl font-bold text-orange-600" x-text="campusLocations.filter(l => l.campus === '和平里校区').length"></div>
+                        <div class="text-sm text-orange-600">和平里校区</div>
+                    </div>
+                    <div class="p-4 bg-red-50 rounded-xl text-center">
+                        <div class="text-2xl font-bold text-red-600" x-text="campusLocations.filter(l => l.priority === 'high').length"></div>
+                        <div class="text-sm text-red-600">高优先级</div>
+                    </div>
+                </div>
+                
+                <!-- 地点列表 -->
+                <div class="space-y-4">
+                    <h3 class="text-lg font-bold text-uibe-primary mb-4">
+                        <i class="fas fa-list mr-2"></i>校园预设定位点
+                        <span x-show="locationFilter !== 'all'" class="ml-2 text-sm text-gray-500 font-normal">
+                            (筛选：<span x-text="locationFilter"></span>)
+                        </span>
+                    </h3>
+                    
+                    <template x-for="location in filteredLocations" :key="location.id">
+                        <div class="p-5 border border-gray-200 rounded-xl hover:border-uibe-primary transition-all">
+                            <div class="flex justify-between items-start">
+                                <div class="flex-1">
+                                    <div class="flex items-center gap-3 mb-2">
+                                        <h4 class="font-bold text-lg" x-text="location.location"></h4>
+                                        <span class="px-2 py-1 rounded-full text-xs font-semibold"
+                                              :class="{
+                                                  'bg-red-100 text-red-700': location.priority === 'high',
+                                                  'bg-yellow-100 text-yellow-700': location.priority === 'medium',
+                                                  'bg-gray-100 text-gray-700': location.priority === 'low'
+                                              }"
+                                              x-text="{
+                                                  'high': '高优先',
+                                                  'medium': '中优先',
+                                                  'low': '低优先'
+                                              }[location.priority]"></span>
+                                        <span class="px-2 py-1 rounded-full text-xs font-semibold"
+                                              :class="location.campus === '望京校区' ? 'bg-blue-100 text-blue-700' : 'bg-orange-100 text-orange-700'"
+                                              x-text="location.campus"></span>
+                                    </div>
+                                    <div class="grid grid-cols-3 gap-4 text-sm text-gray-600">
+                                        <div><i class="fas fa-building mr-1"></i>类型：<span x-text="location.type"></span></div>
+                                        <div><i class="fas fa-code mr-1"></i>编码：<span x-text="location.buildingCode"></span></div>
+                                        <div><i class="fas fa-check-circle mr-1"></i>状态：
+                                            <span :class="location.status === 'active' ? 'text-green-600' : 'text-gray-400'" 
+                                                  x-text="location.status === 'active' ? '启用' : '禁用'"></span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="flex gap-2">
+                                    <button @click="toggleLocationStatus(location.id)"
+                                            :class="location.status === 'active' ? 'bg-yellow-100 hover:bg-yellow-200 text-yellow-700' : 'bg-green-100 hover:bg-green-200 text-green-700'"
+                                            class="px-3 py-2 rounded-lg text-sm font-semibold transition-colors cursor-pointer">
+                                        <i :class="location.status === 'active' ? 'fas fa-toggle-on' : 'fas fa-toggle-off'"></i>
+                                    </button>
+                                    <button @click="editLocation(location.id)"
+                                            class="px-3 py-2 bg-blue-100 hover:bg-blue-200 text-blue-700 rounded-lg text-sm font-semibold transition-colors cursor-pointer">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </template>
+                </div>
+                
+                <!-- 添加新地点按钮 -->
+                <button @click="addNewLocation()"
+                        class="mt-6 w-full py-4 bg-uibe-primary hover:bg-blue-800 text-white font-semibold rounded-xl transition-colors cursor-pointer">
+                    <i class="fas fa-plus mr-2"></i>添加新的巡查地点
+                </button>
+            </div>
+            
+            <!-- 传递给巡检员提示 -->
+            <div class="uibe-card p-6">
+                <h3 class="font-bold text-uibe-primary mb-3">
+                    <i class="fas fa-info-circle mr-2"></i>功能说明
+                </h3>
+                <ul class="text-sm text-gray-600 space-y-2">
+                    <li>• 地点数据将实时同步到所有巡检员的巡检系统中</li>
+                    <li>• 巡检员在提交巡检记录时，系统会自动验证其位置与口述地点是否匹配</li>
+                    <li>• 高优先级地点建议每日必查，中优先级建议隔日检查</li>
+                    <li>• 可以通过启用/禁用开关临时关闭某个地点的巡检要求</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- 管理员用户管理页面 -->
+    <div x-show="currentPage === 'admin-users'" x-cloak class="pt-28 pb-32 px-4">
+        <div class="max-w-4xl mx-auto">
+            <div class="uibe-card p-8 mb-6">
+                <div class="flex items-center gap-4 mb-6">
+                    <button @click="navigateTo('admin-dashboard')"
+                            class="p-2 rounded-lg hover:bg-gray-100 cursor-pointer">
+                        <i class="fas fa-arrow-left text-xl"></i>
+                    </button>
+                    <h2 class="text-2xl font-bold text-uibe-primary">用户管理</h2>
+                </div>
+
+                <!-- 用户统计 -->
+                <div class="grid grid-cols-4 gap-4 mb-8">
+                    <div class="p-4 bg-blue-50 rounded-xl text-center">
+                        <div class="text-2xl font-bold text-uibe-primary" x-text="users.length"></div>
+                        <div class="text-sm text-uibe-primary">总用户数</div>
+                    </div>
+                    <div class="p-4 bg-yellow-50 rounded-xl text-center">
+                        <div class="text-2xl font-bold text-yellow-600" x-text="users.filter(u => u.role === 'admin').length"></div>
+                        <div class="text-sm text-yellow-600">管理员</div>
+                    </div>
+                    <div class="p-4 bg-green-50 rounded-xl text-center">
+                        <div class="text-2xl font-bold text-green-600" x-text="users.filter(u => u.role === 'inspector').length"></div>
+                        <div class="text-sm text-green-600">巡检员</div>
+                    </div>
+                    <div class="p-4 bg-purple-50 rounded-xl text-center">
+                        <div class="text-2xl font-bold text-purple-600" x-text="users.filter(u => u.role === 'report').length"></div>
+                        <div class="text-sm text-purple-600">报表查看</div>
+                    </div>
+                </div>
+
+                <!-- 用户列表 -->
+                <div class="space-y-4">
+                    <h3 class="text-lg font-bold text-uibe-primary mb-4">
+                        <i class="fas fa-users mr-2"></i>系统用户列表
+                    </h3>
+
+                    <template x-for="user in users" :key="user.id">
+                        <div class="p-5 border border-gray-200 rounded-xl hover:border-uibe-primary transition-all">
+                            <div class="flex justify-between items-start">
+                                <div class="flex-1">
+                                    <div class="flex items-center gap-3 mb-2">
+                                        <h4 class="font-bold text-lg" x-text="user.name"></h4>
+                                        <span class="px-2 py-1 rounded-full text-xs font-semibold"
+                                              :class="{
+                                                  'bg-yellow-100 text-yellow-700': user.role === 'admin',
+                                                  'bg-blue-100 text-blue-700': user.role === 'inspector',
+                                                  'bg-purple-100 text-purple-700': user.role === 'report'
+                                              }"
+                                              x-text="{
+                                                  'admin': '管理员',
+                                                  'inspector': '巡检员',
+                                                  'report': '报表查看'
+                                              }[user.role]"></span>
+                                    </div>
+                                    <div class="grid grid-cols-4 gap-4 text-sm text-gray-600">
+                                        <div><i class="fas fa-phone mr-1"></i>手机：<span x-text="user.phone"></span></div>
+                                        <div><i class="fas fa-building mr-1"></i>部门：<span x-text="user.department"></span></div>
+                                        <div><i class="fas fa-map-marker-alt mr-1"></i>校区：<span x-text="user.campus"></span></div>
+                                        <div><i class="fas fa-id-card mr-1"></i>ID：<span class="font-mono" x-text="'UIBE' + user.id.toString().padStart(3, '0')"></span></div>
+                                    </div>
+                                </div>
+                                <div class="flex gap-2">
+                                    <button @click="upgradeUserRole(user.id)"
+                                            :disabled="user.role === 'admin'"
+                                            class="px-3 py-2 bg-green-100 hover:bg-green-200 text-green-700 rounded-lg text-sm font-semibold transition-colors cursor-pointer"
+                                            :class="user.role === 'admin' ? 'opacity-50 cursor-not-allowed' : ''">
+                                        <i class="fas fa-arrow-up"></i> 升级
+                                    </button>
+                                    <button @click="downgradeUserRole(user.id)"
+                                            :disabled="user.role === 'inspector' && user.role !== 'admin' || user.phone === '13800138888'"
+                                            class="px-3 py-2 bg-orange-100 hover:bg-orange-200 text-orange-700 rounded-lg text-sm font-semibold transition-colors cursor-pointer"
+                                            :class="user.role === 'inspector' || user.phone === '13800138888' ? 'opacity-50 cursor-not-allowed' : ''">
+                                        <i class="fas fa-arrow-down"></i> 降级
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </template>
+                </div>
+
+                <!-- 添加新用户按钮 -->
+                <button @click="addNewUser()"
+                        class="mt-6 w-full py-4 bg-uibe-primary hover:bg-blue-800 text-white font-semibold rounded-xl transition-colors cursor-pointer">
+                    <i class="fas fa-plus mr-2"></i>添加新用户
+                </button>
+            </div>
+
+            <!-- 功能说明 -->
+            <div class="uibe-card p-6">
+                <h3 class="font-bold text-uibe-primary mb-3">
+                    <i class="fas fa-info-circle mr-2"></i>功能说明
+                </h3>
+                <ul class="text-sm text-gray-600 space-y-2">
+                    <li>• <strong>管理员</strong>：拥有系统所有管理权限，包括用户管理、功能配置、查看全量报表</li>
+                    <li>• <strong>巡检员</strong>：执行日常巡检任务，提交巡检记录，查看个人隐患清单</li>
+                    <li>• <strong>报表查看</strong>：只查看报表数据，无法进行巡检操作和系统管理</li>
+                    <li>• 初始管理员账户（手机号：13800138888）无法降级</li>
+                    <li>• 升级/降级操作立即生效，用户重新登录后生效</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- 管理员功能管理页面 -->
+    <div x-show="currentPage === 'admin-features'" x-cloak class="pt-28 pb-32 px-4">
+        <div class="max-w-4xl mx-auto">
+            <div class="uibe-card p-8 mb-6">
+                <div class="flex items-center gap-4 mb-6">
+                    <button @click="navigateTo('admin-dashboard')"
+                            class="p-2 rounded-lg hover:bg-gray-100 cursor-pointer">
+                        <i class="fas fa-arrow-left text-xl"></i>
+                    </button>
+                    <h2 class="text-2xl font-bold text-uibe-primary">功能管理</h2>
+                </div>
+
+                <!-- 功能开关列表 -->
+                <div class="space-y-6">
+                    <h3 class="text-lg font-bold text-uibe-primary mb-4">
+                        <i class="fas fa-sliders-h mr-2"></i>巡检功能配置
+                    </h3>
+
+                    <!-- 定位功能开关 -->
+                    <div class="p-5 border border-gray-200 rounded-xl hover:border-uibe-primary transition-all">
+                        <div class="flex justify-between items-start">
+                            <div class="flex-1">
+                                <div class="flex items-center gap-3 mb-2">
+                                    <i class="fas fa-map-marker-alt text-2xl text-red-500"></i>
+                                    <h4 class="font-bold text-lg">巡查员定位功能</h4>
+                                </div>
+                                <p class="text-sm text-gray-600 mb-3">
+                                    巡查员提交巡检记录时，系统是否要求验证其实际位置与口述地点是否匹配。关闭后巡查员可以跳过位置验证。
+                                </p>
+                                <div class="text-xs text-gray-500">
+                                    <i class="fas fa-info-circle mr-1"></i>
+                                    影响范围：AI识别结果页面的"验证位置"按钮
+                                </div>
+                            </div>
+                            <button @click="toggleFeature('locationTracking')"
+                                    :class="featureFlags.locationTracking ? 'bg-green-500 hover:bg-green-600' : 'bg-gray-400 hover:bg-gray-500'"
+                                    class="px-6 py-3 text-white font-semibold rounded-xl transition-colors cursor-pointer z-10"
+                                    style="pointer-events: auto;">
+                                <i :class="featureFlags.locationTracking ? 'fas fa-toggle-on' : 'fas fa-toggle-off'"></i>
+                                <span x-text="featureFlags.locationTracking ? '已启用' : '已关闭'"></span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- 编辑权限开关 -->
+                    <div class="p-5 border border-gray-200 rounded-xl hover:border-uibe-primary transition-all">
+                        <div class="flex justify-between items-start">
+                            <div class="flex-1">
+                                <div class="flex items-center gap-3 mb-2">
+                                    <i class="fas fa-edit text-2xl text-blue-500"></i>
+                                    <h4 class="font-bold text-lg">巡查结果编辑权限</h4>
+                                </div>
+                                <p class="text-sm text-gray-600 mb-3">
+                                    巡查员是否可以编辑已提交的巡检结果。关闭后巡查记录提交后无法修改，确保数据完整性。
+                                </p>
+                                <div class="text-xs text-gray-500">
+                                    <i class="fas fa-info-circle mr-1"></i>
+                                    影响范围：巡检记录的编辑功能（当前为演示，实际系统会生效）
+                                </div>
+                            </div>
+                            <button @click="toggleFeature('modifyRecords')"
+                                    :class="featureFlags.modifyRecords ? 'bg-green-500 hover:bg-green-600' : 'bg-gray-400 hover:bg-gray-500'"
+                                    class="px-6 py-3 text-white font-semibold rounded-xl transition-colors cursor-pointer z-10"
+                                    style="pointer-events: auto;">
+                                <i :class="featureFlags.modifyRecords ? 'fas fa-toggle-on' : 'fas fa-toggle-off'"></i>
+                                <span x-text="featureFlags.modifyRecords ? '已启用' : '已关闭'"></span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- AI处理开关 -->
+                    <div class="p-5 border border-gray-200 rounded-xl hover:border-uibe-primary transition-all">
+                        <div class="flex justify-between items-start">
+                            <div class="flex-1">
+                                <div class="flex items-center gap-3 mb-2">
+                                    <i class="fas fa-brain text-2xl text-purple-500"></i>
+                                    <h4 class="font-bold text-lg">AI智能处理</h4>
+                                </div>
+                                <p class="text-sm text-gray-600 mb-3">
+                                    是否使用AI自动识别巡检描述中的地点、问题和风险等级。关闭后需要手动选择。
+                                </p>
+                                <div class="text-xs text-gray-500">
+                                    <i class="fas fa-info-circle mr-1"></i>
+                                    影响范围：巡查输入页面的"AI智能处理上报"按钮
+                                </div>
+                            </div>
+                            <button @click="toggleFeature('aiProcessing')"
+                                    :class="featureFlags.aiProcessing ? 'bg-green-500 hover:bg-green-600' : 'bg-gray-400 hover:bg-gray-500'"
+                                    class="px-6 py-3 text-white font-semibold rounded-xl transition-colors cursor-pointer z-10"
+                                    style="pointer-events: auto;">
+                                <i :class="featureFlags.aiProcessing ? 'fas fa-toggle-on' : 'fas fa-toggle-off'"></i>
+                                <span x-text="featureFlags.aiProcessing ? '已启用' : '已关闭'"></span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- 语音输入开关 -->
+                    <div class="p-5 border border-gray-200 rounded-xl hover:border-uibe-primary transition-all">
+                        <div class="flex justify-between items-start">
+                            <div class="flex-1">
+                                <div class="flex items-center gap-3 mb-2">
+                                    <i class="fas fa-microphone text-2xl text-green-500"></i>
+                                    <h4 class="font-bold text-lg">语音输入功能</h4>
+                                </div>
+                                <p class="text-sm text-gray-600 mb-3">
+                                    是否允许巡查员使用语音输入描述巡检情况。关闭后只能手动输入。
+                                </p>
+                                <div class="text-xs text-gray-500">
+                                    <i class="fas fa-info-circle mr-1"></i>
+                                    影响范围：巡查输入页面的"语音输入"按钮
+                                </div>
+                            </div>
+                            <button @click="toggleFeature('voiceInput')"
+                                    :class="featureFlags.voiceInput ? 'bg-green-500 hover:bg-green-600' : 'bg-gray-400 hover:bg-gray-500'"
+                                    class="px-6 py-3 text-white font-semibold rounded-xl transition-colors cursor-pointer z-10"
+                                    style="pointer-events: auto;">
+                                <i :class="featureFlags.voiceInput ? 'fas fa-toggle-on' : 'fas fa-toggle-off'"></i>
+                                <span x-text="featureFlags.voiceInput ? '已启用' : '已关闭'"></span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- 通知开关 -->
+                    <div class="p-5 border border-gray-200 rounded-xl hover:border-uibe-primary transition-all">
+                        <div class="flex justify-between items-start">
+                            <div class="flex-1">
+                                <div class="flex items-center gap-3 mb-2">
+                                    <i class="fas fa-bell text-2xl text-yellow-500"></i>
+                                    <h4 class="font-bold text-lg">消息通知</h4>
+                                </div>
+                                <p class="text-sm text-gray-600 mb-3">
+                                    是否向巡查员发送消息通知（如新隐患提醒、处理结果通知等）。
+                                </p>
+                                <div class="text-xs text-gray-500">
+                                    <i class="fas fa-info-circle mr-1"></i>
+                                    影响范围：系统消息推送功能
+                                </div>
+                            </div>
+                            <button @click="toggleFeature('notifications')"
+                                    :class="featureFlags.notifications ? 'bg-green-500 hover:bg-green-600' : 'bg-gray-400 hover:bg-gray-500'"
+                                    class="px-6 py-3 text-white font-semibold rounded-xl transition-colors cursor-pointer z-10"
+                                    style="pointer-events: auto;">
+                                <i :class="featureFlags.notifications ? 'fas fa-toggle-on' : 'fas fa-toggle-off'"></i>
+                                <span x-text="featureFlags.notifications ? '已启用' : '已关闭'"></span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- 报表分享开关 -->
+                    <div class="p-5 border border-gray-200 rounded-xl hover:border-uibe-primary transition-all">
+                        <div class="flex justify-between items-start">
+                            <div class="flex-1">
+                                <div class="flex items-center gap-3 mb-2">
+                                    <i class="fas fa-share-alt text-2xl text-orange-500"></i>
+                                    <h4 class="font-bold text-lg">报表分享</h4>
+                                </div>
+                                <p class="text-sm text-gray-600 mb-3">
+                                    是否允许导出和分享巡检数据报表。
+                                </p>
+                                <div class="text-xs text-gray-500">
+                                    <i class="fas fa-info-circle mr-1"></i>
+                                    影响范围：报表导出和分享功能
+                                </div>
+                            </div>
+                            <button @click="toggleFeature('reportSharing')"
+                                    :class="featureFlags.reportSharing ? 'bg-green-500 hover:bg-green-600' : 'bg-gray-400 hover:bg-gray-500'"
+                                    class="px-6 py-3 text-white font-semibold rounded-xl transition-colors cursor-pointer z-10"
+                                    style="pointer-events: auto;">
+                                <i :class="featureFlags.reportSharing ? 'fas fa-toggle-on' : 'fas fa-toggle-off'"></i>
+                                <span x-text="featureFlags.reportSharing ? '已启用' : '已关闭'"></span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 功能说明 -->
+            <div class="uibe-card p-6">
+                <h3 class="font-bold text-uibe-primary mb-3">
+                    <i class="fas fa-info-circle mr-2"></i>操作说明
+                </h3>
+                <ul class="text-sm text-gray-600 space-y-2">
+                    <li>• 点击开关按钮可启用/关闭对应功能</li>
+                    <li>• 功能配置会实时保存到本地存储</li>
+                    <li>• 巡查员下次登录时会应用最新的功能配置</li>
+                    <li>• 关闭定位功能后，巡查员提交记录无需验证位置</li>
+                    <li>• 关闭编辑权限后，确保巡检记录的数据完整性</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- 管理员数据报表页面 -->
+    <div x-show="currentPage === 'admin-reports'" x-cloak class="pt-28 pb-32 px-4">
+        <div class="max-w-6xl mx-auto">
+            <div class="uibe-card p-8 mb-6">
+                <div class="flex items-center justify-between mb-6">
+                    <div class="flex items-center gap-4">
+                        <button @click="navigateTo('admin-dashboard')"
+                                class="p-2 rounded-lg hover:bg-gray-100 cursor-pointer">
+                            <i class="fas fa-arrow-left text-xl"></i>
+                        </button>
+                        <h2 class="text-2xl font-bold text-uibe-primary">数据报表</h2>
+                    </div>
+                    <button @click="exportReport()"
+                            :disabled="!featureFlags.reportSharing"
+                            :class="!featureFlags.reportSharing ? 'bg-gray-300 cursor-not-allowed' : 'bg-uibe-primary hover:bg-blue-800'"
+                            class="px-6 py-3 text-white font-semibold rounded-xl transition-colors cursor-pointer">
+                        <i class="fas fa-download mr-2"></i>导出报表
+                    </button>
+                </div>
+
+                <!-- 总体统计卡片 -->
+                <div class="grid grid-cols-4 gap-4 mb-8">
+                    <div @click="filterByType('all')"
+                            class="p-5 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl text-white cursor-pointer hover:scale-105 transition-transform shadow-lg">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <div class="text-sm opacity-90">总巡检次数</div>
+                                <div class="text-3xl font-bold" x-text="allInspections.length"></div>
+                            </div>
+                            <i class="fas fa-clipboard-check text-4xl opacity-50"></i>
+                        </div>
+                        <div class="mt-3 text-xs opacity-75">本月累计 <i class="fas fa-arrow-down ml-1"></i></div>
+                    </div>
+                    <div @click="filterByType('normal')"
+                            class="p-5 bg-gradient-to-br from-green-500 to-green-600 rounded-xl text-white cursor-pointer hover:scale-105 transition-transform shadow-lg">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <div class="text-sm opacity-90">正常记录</div>
+                                <div class="text-3xl font-bold" x-text="allInspections.filter(i => i.result === '正常').length"></div>
+                            </div>
+                            <i class="fas fa-check-circle text-4xl opacity-50"></i>
+                        </div>
+                        <div class="mt-3 text-xs opacity-75">占比 <span x-text="Math.round(allInspections.filter(i => i.result === '正常').length / allInspections.length * 100)"></span>% <i class="fas fa-arrow-down ml-1"></i></div>
+                    </div>
+                    <div @click="filterByType('abnormal')"
+                            class="p-5 bg-gradient-to-br from-red-500 to-red-600 rounded-xl text-white cursor-pointer hover:scale-105 transition-transform shadow-lg">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <div class="text-sm opacity-90">异常记录</div>
+                                <div class="text-3xl font-bold" x-text="allInspections.filter(i => i.result === '异常').length"></div>
+                            </div>
+                            <i class="fas fa-exclamation-circle text-4xl opacity-50"></i>
+                        </div>
+                        <div class="mt-3 text-xs opacity-75">占比 <span x-text="Math.round(allInspections.filter(i => i.result === '异常').length / allInspections.length * 100)"></span>% <i class="fas fa-arrow-down ml-1"></i></div>
+                    </div>
+                    <div @click="showInspectorDetails()"
+                            class="p-5 bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl text-white cursor-pointer hover:scale-105 transition-transform shadow-lg">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <div class="text-sm opacity-90">巡检人员</div>
+                                <div class="text-3xl font-bold" x-text="users.filter(u => u.role === 'inspector').length"></div>
+                            </div>
+                            <i class="fas fa-users text-4xl opacity-50"></i>
+                        </div>
+                        <div class="mt-3 text-xs opacity-75">活跃巡检员 <i class="fas fa-arrow-down ml-1"></i></div>
+                    </div>
+                </div>
+
+                <!-- 校区对比统计 -->
+                <div class="grid grid-cols-2 gap-6 mb-8">
+                    <div class="p-6 border-2 border-gray-200 rounded-xl">
+                        <h3 class="text-lg font-bold text-uibe-primary mb-4">
+                            <i class="fas fa-map-marker-alt mr-2 text-blue-500"></i>校区巡检统计
+                        </h3>
+                        <div class="space-y-4">
+                            <div @click="filterByCampus('望京校区')"
+                                    class="flex items-center justify-between p-3 bg-blue-50 rounded-lg cursor-pointer hover:bg-blue-100 transition-colors">
+                                <div class="flex items-center gap-3">
+                                    <i class="fas fa-university text-blue-600"></i>
+                                    <span class="font-semibold">望京校区</span>
+                                </div>
+                                <div class="text-right">
+                                    <div class="text-2xl font-bold text-uibe-primary" x-text="allInspections.filter(i => i.campus === '望京校区').length"></div>
+                                    <div class="text-xs text-gray-500">次巡检 <i class="fas fa-arrow-down ml-1"></i></div>
+                                </div>
+                            </div>
+                            <div @click="filterByCampus('和平里校区')"
+                                    class="flex items-center justify-between p-3 bg-orange-50 rounded-lg cursor-pointer hover:bg-orange-100 transition-colors">
+                                <div class="flex items-center gap-3">
+                                    <i class="fas fa-university text-orange-600"></i>
+                                    <span class="font-semibold">和平里校区</span>
+                                </div>
+                                <div class="text-right">
+                                    <div class="text-2xl font-bold text-orange-600" x-text="allInspections.filter(i => i.campus === '和平里校区').length"></div>
+                                    <div class="text-xs text-gray-500">次巡检 <i class="fas fa-arrow-down ml-1"></i></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="p-6 border-2 border-gray-200 rounded-xl">
+                        <h3 class="text-lg font-bold text-uibe-primary mb-4">
+                            <i class="fas fa-exclamation-triangle mr-2 text-red-500"></i>隐患问题统计
+                        </h3>
+                        <div class="space-y-3">
+                            <template x-for="(count, issue) in issueStatistics" :key="issue">
+                                <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                                    <span class="font-semibold text-gray-700" x-text="issue"></span>
+                                    <div class="flex items-center gap-2">
+                                        <span class="text-2xl font-bold text-red-600" x-text="count"></span>
+                                        <span class="text-xs text-gray-500">次</span>
+                                    </div>
+                                </div>
+                            </template>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 巡检员绩效 -->
+                <div class="mb-8">
+                    <h3 class="text-lg font-bold text-uibe-primary mb-4">
+                        <i class="fas fa-chart-bar mr-2 text-green-500"></i>巡检员绩效排行
+                    </h3>
+                    <div class="grid grid-cols-3 gap-4">
+                        <template x-for="(inspector, index) in inspectorPerformance" :key="inspector.id">
+                            <div class="p-4 border-2 border-gray-200 rounded-xl hover:border-uibe-primary transition-all">
+                                <div class="flex items-center justify-between mb-3">
+                                    <div class="flex items-center gap-3">
+                                        <div class="w-10 h-10 bg-gradient-to-br from-uibe-primary to-uibe-secondary rounded-full flex items-center justify-center text-white font-bold"
+                                             x-text="inspector.name.charAt(0)"></div>
+                                        <div>
+                                            <div class="font-bold" x-text="inspector.name"></div>
+                                            <div class="text-xs text-gray-500" x-text="inspector.campus"></div>
+                                        </div>
+                                    </div>
+                                    <div class="text-2xl font-bold text-uibe-primary" x-text="inspector.count"></div>
+                                </div>
+                                <div class="flex justify-between text-sm text-gray-600">
+                                    <span>正常：<span class="text-green-600" x-text="inspector.normal"></span></span>
+                                    <span>异常：<span class="text-red-600" x-text="inspector.abnormal"></span></span>
+                                </div>
+                            </div>
+                        </template>
+                    </div>
+                </div>
+
+                <!-- 全量巡检记录 -->
+                <div>
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-lg font-bold text-uibe-primary">
+                            <i class="fas fa-list mr-2 text-purple-500"></i>全量巡检记录
+                        </h3>
+                        <div class="flex gap-2">
+                            <select x-model="reportFilter" @change="filterReports()" 
+                                    class="px-3 py-2 bg-white border-2 border-gray-200 rounded-lg text-sm font-semibold text-uibe-primary focus:border-uibe-primary focus:outline-none cursor-pointer">
+                                <option value="all">全部记录</option>
+                                <option value="normal">正常</option>
+                                <option value="abnormal">异常</option>
+                            </select>
+                            <select x-model="reportCampusFilter" @change="filterReports()"
+                                    class="px-3 py-2 bg-white border-2 border-gray-200 rounded-lg text-sm font-semibold text-uibe-primary focus:border-uibe-primary focus:outline-none cursor-pointer">
+                                <option value="all">全部校区</option>
+                                <option value="望京校区">望京校区</option>
+                                <option value="和平里校区">和平里校区</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="overflow-x-auto">
+                        <table class="w-full">
+                            <thead>
+                                <tr class="bg-gray-100">
+                                    <th class="px-4 py-3 text-left text-sm font-bold text-uibe-primary">日期</th>
+                                    <th class="px-4 py-3 text-left text-sm font-bold text-uibe-primary">巡检员</th>
+                                    <th class="px-4 py-3 text-left text-sm font-bold text-uibe-primary">校区</th>
+                                    <th class="px-4 py-3 text-left text-sm font-bold text-uibe-primary">地点</th>
+                                    <th class="px-4 py-3 text-left text-sm font-bold text-uibe-primary">结果</th>
+                                    <th class="px-4 py-3 text-left text-sm font-bold text-uibe-primary">问题</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <template x-for="record in filteredReports" :key="record.id">
+                                    <tr class="border-b border-gray-200 hover:bg-blue-50 transition-colors">
+                                        <td class="px-4 py-3 text-sm text-gray-700" x-text="record.date"></td>
+                                        <td class="px-4 py-3 text-sm font-semibold text-uibe-primary" x-text="record.inspector"></td>
+                                        <td class="px-4 py-3 text-sm text-gray-600" x-text="record.campus"></td>
+                                        <td class="px-4 py-3 text-sm text-gray-600" x-text="record.location"></td>
+                                        <td class="px-4 py-3">
+                                            <span class="px-2 py-1 rounded-full text-xs font-semibold"
+                                                  :class="record.result === '正常' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'"
+                                                  x-text="record.result"></span>
+                                        </td>
+                                        <td class="px-4 py-3 text-sm text-gray-600" x-text="record.issue"></td>
+                                    </tr>
+                                </template>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 功能说明 -->
+            <div class="uibe-card p-6">
+                <h3 class="font-bold text-uibe-primary mb-3">
+                    <i class="fas fa-info-circle mr-2"></i>功能说明
+                </h3>
+                <ul class="text-sm text-gray-600 space-y-2">
+                    <li>• 报表数据包含所有巡检员的历史巡检记录</li>
+                    <li>• 可以按结果状态（正常/异常）和校区进行筛选查看</li>
+                    <li>• 巡检员绩效排行按巡检次数排序</li>
+                    <li>• 点击"导出报表"可下载Excel格式的详细数据（需启用报表分享功能）</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- 隐患列表页面 -->
+    <div x-show="currentPage === 'inspector-hazards'" x-cloak class="pt-28 pb-32 px-4">
+        <div class="max-w-lg mx-auto">
+            <div class="uibe-card p-6">
+                <div class="flex items-center gap-4 mb-6">
+                    <button @click="navigateTo('inspector-home')"
+                            class="p-2 rounded-lg hover:bg-gray-100 cursor-pointer">
+                        <i class="fas fa-arrow-left text-xl"></i>
+                    </button>
+                    <h2 class="text-2xl font-bold text-uibe-primary">隐患清单</h2>
+                </div>
+                
+                <div class="space-y-4">
+                    <template x-for="hazard in hazards" :key="hazard.id">
+                        <div class="p-4 border border-gray-200 rounded-xl hover:border-uibe-primary transition-colors">
+                            <div class="flex justify-between items-start mb-2">
+                                <h3 class="font-bold text-lg" x-text="hazard.location"></h3>
+                                <span class="inline-block px-3 py-1 rounded-full text-xs font-semibold"
+                                      :class="{
+                                          'bg-red-100 text-red-700': hazard.status === 'pending',
+                                          'bg-yellow-100 text-yellow-700': hazard.status === 'processing',
+                                          'bg-green-100 text-green-700': hazard.status === 'resolved'
+                                      }"
+                                      x-text="{
+                                          'pending': '待处理',
+                                          'processing': '处理中',
+                                          'resolved': '已处理'
+                                      }[hazard.status]"></span>
+                            </div>
+                            <p class="text-gray-700 mb-2" x-text="hazard.issue"></p>
+                            <div class="text-sm text-gray-500">
+                                风险等级：<span x-text="hazard.riskLevel === 'high' ? '高' : hazard.riskLevel === 'medium' ? '中' : '低'"></span> |
+                                校区：<span x-text="hazard.campus"></span> |
+                                负责人：<span x-text="hazard.assignedTo"></span>
+                            </div>
+                        </div>
+                    </template>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 巡查记录页面 -->
+    <div x-show="currentPage === 'inspector-records'" x-cloak class="pt-28 pb-32 px-4">
+        <div class="max-w-lg mx-auto">
+            <div class="uibe-card p-6">
+                <div class="flex items-center gap-4 mb-6">
+                    <button @click="navigateTo('inspector-home')"
+                            class="p-2 rounded-lg hover:bg-gray-100 cursor-pointer">
+                        <i class="fas fa-arrow-left text-xl"></i>
+                    </button>
+                    <h2 class="text-2xl font-bold text-uibe-primary">巡查记录</h2>
+                </div>
+
+                <!-- 统计卡片 -->
+                <div class="grid grid-cols-3 gap-3 mb-6">
+                    <div class="bg-blue-50 rounded-lg p-3 text-center">
+                        <div class="text-2xl font-bold text-blue-600" x-text="inspectionRecords.length"></div>
+                        <div class="text-xs text-gray-600">总记录</div>
+                    </div>
+                    <div class="bg-green-50 rounded-lg p-3 text-center">
+                        <div class="text-2xl font-bold text-green-600"
+                             x-text="inspectionRecords.filter(r => r.result === '正常').length"></div>
+                        <div class="text-xs text-gray-600">正常</div>
+                    </div>
+                    <div class="bg-red-50 rounded-lg p-3 text-center">
+                        <div class="text-2xl font-bold text-red-600"
+                             x-text="inspectionRecords.filter(r => r.result === '异常').length"></div>
+                        <div class="text-xs text-gray-600">异常</div>
+                    </div>
+                </div>
+
+                <!-- 记录列表 -->
+                <div x-show="inspectionRecords.length > 0" class="space-y-4">
+                    <template x-for="record in inspectionRecords" :key="record.id">
+                        <div class="p-4 border-2 rounded-xl hover:border-uibe-primary transition-colors"
+                             :class="record.result === '异常' ? 'border-red-200 bg-red-50' : 'border-gray-200 bg-white'">
+                            <div class="flex justify-between items-start mb-2">
+                                <div>
+                                    <h3 class="font-bold text-lg" x-text="record.location"></h3>
+                                    <div class="text-sm text-gray-600" x-text="record.campus"></div>
+                                </div>
+                                <span class="inline-block px-3 py-1 rounded-full text-xs font-semibold"
+                                      :class="record.result === '异常' ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'"
+                                      x-text="record.result"></span>
+                            </div>
+                            <p class="text-gray-700 mb-2" x-text="record.issue"></p>
+                            <div class="text-sm text-gray-500 flex items-center gap-3">
+                                <span x-text="record.date"></span>
+                                <span>|</span>
+                                <span>风险等级：<span
+                                        :class="record.severity === 'high' ? 'text-red-600' : record.severity === 'medium' ? 'text-yellow-600' : 'text-green-600'"
+                                        x-text="record.severity === 'high' ? '高' : record.severity === 'medium' ? '中' : '低'"></span></span>
+                                <template x-if="featureFlags.locationTracking">
+                                    <template>
+                                        <span>|</span>
+                                        <span :class="record.verified ? 'text-green-600' : 'text-gray-500'"
+                                              x-text="record.verified ? '已验证' : '未验证'"></span>
+                                    </template>
+                                </template>
+                            </div>
+                        </div>
+                    </template>
+                </div>
+
+                <!-- 空状态 -->
+                <div x-show="inspectionRecords.length === 0" class="text-center py-12">
+                    <i class="fas fa-clipboard-list text-6xl text-gray-300 mb-4"></i>
+                    <div class="text-gray-500 mb-4">暂无巡查记录</div>
+                    <button @click="navigateTo('inspector-input')"
+                            class="px-6 py-3 bg-uibe-primary text-white rounded-xl font-semibold hover:bg-blue-800 transition-colors cursor-pointer">
+                        <i class="fas fa-plus-circle mr-2"></i>
+                        开始首次巡查
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 底部导航（巡检员使用，管理员不显示） -->
+    <template x-if="isAuthenticated && !isAdmin">
+        <div class="uibe-bottom-nav px-4 py-3 animate-bounce z-50">
+            <div class="flex items-center gap-6">
+                <button @click="navigateTo('inspector-home')"
+                        :class="currentPage === 'inspector-home' ? 'text-uibe-primary font-bold' : 'text-gray-500'"
+                        class="flex flex-col items-center px-3 py-1 cursor-pointer">
+                    <i class="fas fa-home text-xl mb-1"></i>
+                    <span class="text-xs">工作台</span>
+                </button>
+                <button @click="navigateTo('inspector-records')"
+                        :class="currentPage === 'inspector-records' ? 'text-uibe-primary font-bold' : 'text-gray-500'"
+                        class="flex flex-col items-center px-3 py-1 cursor-pointer">
+                    <i class="fas fa-clipboard-list text-xl mb-1"></i>
+                    <span class="text-xs">巡查记录</span>
+                </button>
+                <button @click="navigateTo('inspector-hazards')"
+                        :class="currentPage === 'inspector-hazards' ? 'text-uibe-primary font-bold' : 'text-gray-500'"
+                        class="flex flex-col items-center px-3 py-1 cursor-pointer">
+                    <i class="fas fa-exclamation-triangle text-xl mb-1"></i>
+                    <span class="text-xs">隐患</span>
+                </button>
+                <button @click="logout()"
+                        class="flex flex-col items-center px-3 py-1 cursor-pointer text-red-500 hover:text-red-700">
+                    <i class="fas fa-sign-out-alt text-xl mb-1"></i>
+                    <span class="text-xs">退出登录</span>
+                </button>
+            </div>
+        </div>
+    </template>
+    
+    <script>
+        // 应用状态管理
+        document.addEventListener('alpine:init', () => {
+            Alpine.data('appState', () => ({
+                // 状态初始化
+                init() {
+                    // 从 localStorage 恢复状态
+                    try {
+                        this.isAuthenticated = localStorage.getItem('uibe_authenticated') === 'true';
+                        const storedUser = localStorage.getItem('uibe_currentUser');
+                        this.currentUser = storedUser ? JSON.parse(storedUser) : null;
+                        this.isAdmin = localStorage.getItem('uibe_isAdmin') === 'true';
+                    } catch (e) {
+                        console.error('初始化失败:', e);
+                    }
+
+                    // 初始化语音识别
+                    this.initSpeechRecognition();
+
+                    // 初始化统计
+                    this.updateWordCount();
+
+                    // 初始化地点筛选
+                    this.filterLocations();
+
+                    // 初始化报表筛选
+                    this.filterReports();
+
+                    // 初始页面
+                    if (!this.isAuthenticated) {
+                        this.currentPage = 'login';
+                    } else {
+                        this.currentPage = this.isAdmin ? 'admin-dashboard' : 'inspector-home';
+                    }
+
+                    console.log('应用初始化完成:', this.currentPage);
+                },
+                
+                // 状态变量
+                isAuthenticated: false,
+                currentUser: null,
+                isAdmin: false,
+                currentPage: 'login',
+                
+                loginForm: { phone: '', code: '' },
+                verificationCode: '123456',
+                isVerifyingCode: false,
+                
+                // 测试数据
+                users: [
+                    { id: 1, name: '张保卫', phone: '13800138001', role: 'inspector', department: '保卫处', campus: '望京校区' },
+                    { id: 2, name: '李保安', phone: '13800138002', role: 'inspector', department: '保卫处', campus: '和平里校区' },
+                    { id: 3, name: '王巡逻', phone: '13800138003', role: 'inspector', department: '保卫处', campus: '望京校区' },
+                    { id: 4, name: '刘安全', phone: '13800138004', role: 'inspector', department: '保卫处', campus: '和平里校区' },
+                    { id: 5, name: '赵监督', phone: '13800138005', role: 'inspector', department: '保卫处', campus: '望京校区' },
+                    { id: 6, name: '孙分析', phone: '13800138006', role: 'report', department: '保卫处', campus: '望京校区' },
+                    { id: 7, name: '陈主任', phone: '13800138888', role: 'admin', department: '信息化办公室', campus: '望京校区' }
+                ],
+                
+                featureFlags: JSON.parse(localStorage.getItem('uibe_features')) || {
+                    modifyRecords: true,
+                    locationTracking: true,
+                    aiProcessing: true,
+                    voiceInput: true,
+                    notifications: true,
+                    reportSharing: true
+                },
+                
+                campusStats: {
+                    totalInspections: 156,
+                    resolvedIssues: 28,
+                    pendingIssues: 12
+                },
+                
+                aiInput: '',
+                aiResult: null,
+                isRecording: false,
+                wordCount: 0,
+
+                // 语音识别相关
+                recognition: null,
+                isRecognitionSupported: true,
+                
+                hazards: [
+                    { id: 1, campus: '望京校区', location: '诚信楼', issue: '消防通道阻塞', riskLevel: 'high', status: 'pending', assignedTo: '张保卫' },
+                    { id: 2, campus: '和平里校区', location: '汇德公寓', issue: '电线裸露', riskLevel: 'medium', status: 'processing', assignedTo: '李保安' },
+                    { id: 3, campus: '望京校区', location: '宁远楼', issue: '应急通道照明不足', riskLevel: 'medium', status: 'resolved', assignedTo: '王巡逻' }
+                ],
+
+                // 个人巡查记录
+                inspectionRecords: [],
+                
+                // 校园定位点数据 - 管理员维护
+                campusLocations: [
+                    { id: 1, campus: '望京校区', type: '教学楼', location: '诚信楼', buildingCode: 'CX', priority: 'high', status: 'active' },
+                    { id: 2, campus: '望京校区', type: '教学楼', location: '宁远楼', buildingCode: 'NY', priority: 'high', status: 'active' },
+                    { id: 3, campus: '望京校区', type: '学生宿舍', location: '虹远楼', buildingCode: 'HY', priority: 'high', status: 'active' },
+                    { id: 4, campus: '和平里校区', type: '学生宿舍', location: '汇德公寓', buildingCode: 'HD', priority: 'high', status: 'active' },
+                    { id: 5, campus: '望京校区', type: '办公楼', location: '博学楼', buildingCode: 'BX', priority: 'medium', status: 'active' },
+                    { id: 6, campus: '望京校区', type: '图书馆', location: '图书馆', buildingCode: 'LIB', priority: 'medium', status: 'active' },
+                    { id: 7, campus: '望京校区', type: '实验楼', location: '科研楼', buildingCode: 'KY', priority: 'medium', status: 'active' },
+                    { id: 8, campus: '望京校区', type: '食堂', location: '第一食堂', buildingCode: 'C1', priority: 'low', status: 'active' },
+                    { id: 9, campus: '望京校区', type: '食堂', location: '第二食堂', buildingCode: 'C2', priority: 'low', status: 'active' },
+                    { id: 10, campus: '和平里校区', type: '教学楼', location: '教学主楼', buildingCode: 'JM', priority: 'high', status: 'active' },
+                    { id: 11, campus: '和平里校区', type: '实验楼', location: '实验大楼', buildingCode: 'SY', priority: 'medium', status: 'active' },
+                    { id: 12, campus: '望京校区', type: '体育场馆', location: '体育馆', buildingCode: 'GYM', priority: 'low', status: 'active' }
+                ],
+                
+                // 定位验证数据
+                currentLocation: null,
+                locationVerified: false,
+                locationMatchStatus: 'pending', // pending, matched, mismatched
+
+                // 地点筛选器
+                locationFilter: 'all',
+                filteredLocations: [],
+
+                // 报表筛选器
+                reportFilter: 'all',
+                reportCampusFilter: 'all',
+                filteredReports: [],
+
+                // 全量巡检记录数据
+                allInspections: [
+                    { id: 1, date: '2026-03-25 09:30', inspector: '张保卫', campus: '望京校区', location: '诚信楼', result: '正常', issue: '设备设施运行正常' },
+                    { id: 2, date: '2026-03-25 10:15', inspector: '李保安', campus: '和平里校区', location: '汇德公寓', result: '异常', issue: '电线裸露' },
+                    { id: 3, date: '2026-03-25 11:00', inspector: '王巡逻', campus: '望京校区', location: '宁远楼', result: '异常', issue: '消防通道阻塞' },
+                    { id: 4, date: '2026-03-25 14:20', inspector: '刘安全', campus: '和平里校区', location: '教学主楼', result: '正常', issue: '设备设施运行正常' },
+                    { id: 5, date: '2026-03-25 15:45', inspector: '张保卫', campus: '望京校区', location: '虹远楼', result: '正常', issue: '设备设施运行正常' },
+                    { id: 6, date: '2026-03-24 09:00', inspector: '赵监督', campus: '望京校区', location: '博学楼', result: '异常', issue: '应急照明故障' },
+                    { id: 7, date: '2026-03-24 10:30', inspector: '李保安', campus: '和平里校区', location: '实验大楼', result: '正常', issue: '设备设施运行正常' },
+                    { id: 8, date: '2026-03-24 13:15', inspector: '王巡逻', campus: '望京校区', location: '图书馆', result: '正常', issue: '设备设施运行正常' },
+                    { id: 9, date: '2026-03-24 16:00', inspector: '刘安全', campus: '和平里校区', location: '汇德公寓', result: '异常', issue: '灭火器过期' },
+                    { id: 10, date: '2026-03-23 08:45', inspector: '张保卫', campus: '望京校区', location: '第一食堂', result: '正常', issue: '设备设施运行正常' },
+                    { id: 11, date: '2026-03-23 11:30', inspector: '赵监督', campus: '望京校区', location: '科研楼', result: '异常', issue: '消防设备缺失' },
+                    { id: 12, date: '2026-03-23 14:15', inspector: '李保安', campus: '和平里校区', location: '教学主楼', result: '正常', issue: '设备设施运行正常' },
+                    { id: 13, date: '2026-03-22 09:30', inspector: '王巡逻', campus: '望京校区', location: '第二食堂', result: '正常', issue: '设备设施运行正常' },
+                    { id: 14, date: '2026-03-22 10:45', inspector: '刘安全', campus: '和平里校区', location: '实验大楼', result: '异常', issue: '疏散标识不清' },
+                    { id: 15, date: '2026-03-22 15:20', inspector: '张保卫', campus: '望京校区', location: '体育馆', result: '正常', issue: '设备设施运行正常' },
+                    { id: 16, date: '2026-03-21 08:00', inspector: '赵监督', campus: '望京校区', location: '诚信楼', result: '异常', issue: '消防通道杂物' },
+                    { id: 17, date: '2026-03-21 11:15', inspector: '李保安', campus: '和平里校区', location: '汇德公寓', result: '正常', issue: '设备设施运行正常' },
+                    { id: 18, date: '2026-03-21 13:30', inspector: '王巡逻', campus: '望京校区', location: '宁远楼', result: '正常', issue: '设备设施运行正常' },
+                    { id: 19, date: '2026-03-20 09:15', inspector: '刘安全', campus: '和平里校区', location: '教学主楼', result: '异常', issue: '安全门故障' },
+                    { id: 20, date: '2026-03-20 14:00', inspector: '张保卫', campus: '望京校区', location: '虹远楼', result: '正常', issue: '设备设施运行正常' }
+                ],
+                
+                // 方法
+                async loginWithCode() {
+                    console.log('登录按钮点击');
+                    
+                    if (!this.loginForm.phone) {
+                        alert('请输入手机号');
+                        return;
+                    }
+                    
+                    if (this.loginForm.code !== this.verificationCode) {
+                        alert('验证码错误，演示系统请使用：123456');
+                        return;
+                    }
+                    
+                    // 查找用户或自动创建
+                    let user = this.users.find(u => u.phone === this.loginForm.phone);
+                    if (!user) {
+                        user = {
+                            id: this.users.length + 1,
+                            name: `巡检员${this.loginForm.phone.slice(-4)}`,
+                            phone: this.loginForm.phone,
+                            role: 'inspector',
+                            department: '保卫处',
+                            campus: '望京校区'
+                        };
+                        this.users.push(user);
+                    }
+                    
+                    // 更新状态
+                    this.currentUser = user;
+                    this.isAdmin = user.role === 'admin';
+                    this.isAuthenticated = true;
+                    
+                    // 保存到本地存储
+                    localStorage.setItem('uibe_authenticated', 'true');
+                    localStorage.setItem('uibe_currentUser', JSON.stringify(user));
+                    localStorage.setItem('uibe_isAdmin', user.role === 'admin');
+                    
+                    // 跳转到对应页面
+                    if (user.role === 'admin') {
+                        this.currentPage = 'admin-dashboard';
+                    } else {
+                        this.currentPage = 'inspector-home';
+                    }
+                    this.loginForm = { phone: '', code: '' };
+                    
+                    console.log('登录成功:', user, '角色:', user.role);
+                },
+                
+                simulateWechatLogin() {
+                    alert('演示系统：模拟微信登录成功！\n\n微信用户自动注册为巡检员');
+                    
+                    const wechatUser = {
+                        id: 100,
+                        name: '微信巡检员',
+                        phone: '13800001111',
+                        role: 'inspector',
+                        department: '保卫处',
+                        campus: '望京校区'
+                    };
+                    
+                    this.currentUser = wechatUser;
+                    this.isAdmin = false;
+                    this.isAuthenticated = true;
+                    
+                    localStorage.setItem('uibe_authenticated', 'true');
+                    localStorage.setItem('uibe_currentUser', JSON.stringify(wechatUser));
+                    localStorage.setItem('uibe_isAdmin', 'false');
+                    
+                    this.currentPage = 'inspector-home';
+                },
+                
+                sendVerificationCode() {
+                    if (!this.loginForm.phone) {
+                        alert('请输入手机号');
+                        return;
+                    }
+                    
+                    this.isVerifyingCode = true;
+                    setTimeout(() => {
+                        this.isVerifyingCode = false;
+                        alert(`验证码 123456 已发送到 ${this.loginForm.phone}\n（演示系统预置验证码为 123456）`);
+                    }, 1000);
+                },
+                
+                navigateTo(page) {
+                    console.log('跳转到页面:', page);
+                    this.currentPage = page;
+                },
+                
+                logout() {
+                    this.isAuthenticated = false;
+                    this.currentUser = null;
+                    this.currentPage = 'login';
+                    
+                    localStorage.removeItem('uibe_authenticated');
+                    localStorage.removeItem('uibe_currentUser');
+                    localStorage.removeItem('uibe_isAdmin');
+                    
+                    console.log('已退出登录');
+                },
+                
+                simulateAIProcessing() {
+                    if (!this.aiInput.trim()) {
+                        return; // 不显示弹窗，静默返回
+                    }
+
+                    console.log('开始AI分析:', this.aiInput);
+
+                    const input = this.aiInput.toLowerCase();
+                    let location = '诚信楼';
+                    let campus = '望京校区';
+                    let result = '正常';
+                    let issue = '设备设施运行正常';
+                    let severity = 'low';
+
+                    // 地点识别逻辑（基于用户输入的真实语音）
+                    if (input.includes('宁远')) location = '宁远楼';
+                    if (input.includes('诚信')) location = '诚信楼';
+                    if (input.includes('汇德') || input.includes('公寓')) { location = '汇德公寓'; campus = '和平里校区'; }
+                    if (input.includes('虹远')) { location = '虹远楼'; campus = '望京校区'; }
+                    if (input.includes('博学')) { location = '博学楼'; campus = '望京校区'; }
+                    if (input.includes('图书馆')) { location = '图书馆'; campus = '望京校区'; }
+                    if (input.includes('科研')) { location = '科研楼'; campus = '望京校区'; }
+                    if (input.includes('食堂')) {
+                        if (input.includes('第一')) { location = '第一食堂'; campus = '望京校区'; }
+                        else if (input.includes('第二')) { location = '第二食堂'; campus = '望京校区'; }
+                        else { location = '第一食堂'; campus = '望京校区'; }
+                    }
+                    if (input.includes('体育馆')) { location = '体育馆'; campus = '望京校区'; }
+                    if (input.includes('教学主楼') || input.includes('教学')) { location = '教学主楼'; campus = '和平里校区'; }
+                    if (input.includes('实验')) { location = '实验大楼'; campus = '和平里校区'; }
+
+                    // 问题识别逻辑（基于用户输入的真实语音）
+                    if (input.includes('消防') || input.includes('堵塞') || input.includes('杂物')) {
+                        result = '异常';
+                        issue = '消防通道阻塞';
+                        severity = 'high';
+                    } else if (input.includes('电线') || input.includes('裸露') || input.includes('线路')) {
+                        result = '异常';
+                        issue = '电线裸露';
+                        severity = 'medium';
+                    } else if (input.includes('照明') || input.includes('灯光') || input.includes('灯')) {
+                        result = '异常';
+                        issue = '应急照明故障';
+                        severity = 'medium';
+                    } else if (input.includes('灭火器') || input.includes('灭火')) {
+                        result = '异常';
+                        issue = '灭火器过期';
+                        severity = 'high';
+                    } else if (input.includes('正常') || input.includes('没有问题') || input.includes('运行正常')) {
+                        result = '正常';
+                        issue = '设备设施运行正常';
+                        severity = 'low';
+                    }
+
+                    // 设置AI结果（不再跳转页面）
+                    this.aiResult = { campus, location, result, issue, severity };
+
+                    // 重置位置验证状态
+                    this.locationVerified = false;
+                    this.locationMatchStatus = 'pending';
+                    this.currentLocation = null;
+
+                    console.log('AI分析完成:', this.aiResult);
+                },
+                
+                confirmInspection() {
+                    if (!this.aiResult) return;
+
+                    // 创建巡检记录
+                    const record = {
+                        id: Date.now(),
+                        date: new Date().toLocaleString('zh-CN'),
+                        campus: this.aiResult.campus,
+                        location: this.aiResult.location,
+                        result: this.aiResult.result,
+                        issue: this.aiResult.result === '异常' ? this.aiResult.issue : '设备设施运行正常',
+                        severity: this.aiResult.severity,
+                        inspector: this.currentUser?.name || '巡检员',
+                        verified: this.locationVerified
+                    };
+
+                    // 保存到个人记录
+                    this.inspectionRecords.unshift(record);
+
+                    // 更新统计
+                    this.campusStats.totalInspections += 1;
+                    if (this.aiResult.result === '异常') {
+                        this.campusStats.pendingIssues += 1;
+                    }
+
+                    // 清空所有状态
+                    this.aiInput = '';
+                    this.aiResult = null;
+                    this.wordCount = 0;
+                    this.isRecording = false;
+                    this.currentPage = 'inspector-home';
+
+                    console.log('巡检记录已保存:', record);
+                },
+                
+                // 初始化语音识别
+                initSpeechRecognition() {
+                    // 检查浏览器是否支持语音识别
+                    if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+                        this.isRecognitionSupported = false;
+                        console.warn('当前浏览器不支持语音识别API');
+                        alert('您的浏览器不支持语音识别功能，请使用Chrome或Edge浏览器，或直接手动输入。');
+                        return;
+                    }
+
+                    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+
+                    this.recognition = new SpeechRecognition();
+                    this.recognition.lang = 'zh-CN';
+                    this.recognition.continuous = false;
+                    this.recognition.interimResults = true;
+
+                    // 识别结果回调
+                    this.recognition.onresult = (event) => {
+                        let finalTranscript = '';
+                        let interimTranscript = '';
+
+                        for (let i = event.resultIndex; i < event.results.length; i++) {
+                            const transcript = event.results[i][0].transcript;
+                            if (event.results[i].isFinal) {
+                                finalTranscript += transcript;
+                            } else {
+                                interimTranscript += transcript;
+                            }
+                        }
+
+                        if (finalTranscript) {
+                            this.aiInput = finalTranscript;
+                            this.updateWordCount();
+                            console.log('语音识别结果:', finalTranscript);
+                        }
+                    };
+
+                    // 识别结束回调
+                    this.recognition.onend = () => {
+                        if (this.isRecording) {
+                            // 如果还在录音状态，说明识别结束了，停止录音
+                            this.isRecording = false;
+                            console.log('录音结束');
+
+                            // 自动进行AI分析
+                            if (this.aiInput.trim()) {
+                                setTimeout(() => {
+                                    this.simulateAIProcessing();
+                                }, 300);
+                            }
+                        }
+                    };
+
+                    // 错误处理
+                    this.recognition.onerror = (event) => {
+                        console.error('语音识别错误:', event.error);
+                        this.isRecording = false;
+
+                        let errorMsg = '语音识别发生错误';
+                        switch (event.error) {
+                            case 'no-speech':
+                                errorMsg = '未检测到语音，请重新尝试';
+                                break;
+                            case 'audio-capture':
+                                errorMsg = '无法访问麦克风，请检查权限设置';
+                                break;
+                            case 'not-allowed':
+                                errorMsg = '麦克风权限被拒绝，请在浏览器设置中允许访问';
+                                break;
+                            case 'network':
+                                errorMsg = '网络错误，请检查网络连接';
+                                break;
+                        }
+                        alert(errorMsg);
+                    };
+
+                    // 开始识别回调
+                    this.recognition.onstart = () => {
+                        console.log('语音识别已启动');
+                    };
+
+                    console.log('语音识别初始化完成');
+                },
+
+                toggleVoiceInput() {
+                    console.log('toggleVoiceInput 被调用，isRecording:', this.isRecording);
+
+                    if (!this.featureFlags.voiceInput) {
+                        alert('语音输入功能已被管理员关闭，请联系系统管理员。');
+                        return;
+                    }
+
+                    if (!this.isRecognitionSupported) {
+                        alert('您的浏览器不支持语音识别，请手动输入。');
+                        return;
+                    }
+
+                    if (this.isRecording) {
+                        // 停止录音
+                        this.isRecording = false;
+                        this.recognition.stop();
+                        console.log('停止录音');
+                    } else {
+                        // 清空之前的分析结果
+                        this.aiResult = null;
+                        this.aiInput = '';
+
+                        // 开始录音
+                        this.isRecording = true;
+                        try {
+                            this.recognition.start();
+                            console.log('开始录音');
+                        } catch (error) {
+                            console.error('启动语音识别失败:', error);
+                            this.isRecording = false;
+                            alert('启动语音识别失败，请检查麦克风权限');
+                        }
+                    }
+                },
+                
+                updateWordCount() {
+                    if (this.aiInput.trim()) {
+                        this.wordCount = this.aiInput.trim().length;
+                    } else {
+                        this.wordCount = 0;
+                    }
+                },
+                
+                // 地点管理方法
+                toggleLocationStatus(locationId) {
+                    const location = this.campusLocations.find(l => l.id === locationId);
+                    if (!location) return;
+                    
+                    const newStatus = location.status === 'active' ? 'inactive' : 'active';
+                    const statusText = newStatus === 'active' ? '启用' : '禁用';
+                    
+                    if (confirm(`确定要${statusText}地点"${location.location}"吗？\n\n${newStatus === 'active' ? '启用后巡检员将需要巡检该地点' : '禁用后巡检员将无需巡检该地点'}`)) {
+                        location.status = newStatus;
+                        alert(`地点"${location.location}"已${statusText}`);
+                    }
+                },
+                
+                editLocation(locationId) {
+                    const location = this.campusLocations.find(l => l.id === locationId);
+                    if (!location) return;
+                    
+                    const newLocation = prompt(`请编辑地点名称：`, location.location);
+                    if (newLocation && newLocation.trim() && newLocation !== location.location) {
+                        const oldName = location.location;
+                        location.location = newLocation.trim();
+                        alert(`地点名称已更新：\n从 "${oldName}" 更新为 "${location.location}"`);
+                    }
+                },
+                
+                addNewLocation() {
+                    const campus = prompt('请输入校区（望京校区/和平里校区）：', '望京校区');
+                    if (!campus || (campus !== '望京校区' && campus !== '和平里校区')) {
+                        alert('请输入有效的校区名称：望京校区 或 和平里校区');
+                        return;
+                    }
+                    
+                    const locationName = prompt('请输入地点名称（如：新教学楼）：');
+                    if (!locationName || !locationName.trim()) {
+                        alert('请输入有效的地点名称');
+                        return;
+                    }
+                    
+                    const type = prompt('请输入地点类型（教学楼/学生宿舍/办公楼/图书馆/实验楼/食堂/体育场馆）：', '教学楼');
+                    if (!type || !type.trim()) {
+                        alert('请输入有效的地点类型');
+                        return;
+                    }
+                    
+                    const priority = prompt('请输入优先级（high/medium/low）：', 'medium');
+                    if (!['high', 'medium', 'low'].includes(priority)) {
+                        alert('优先级必须是：high、medium 或 low');
+                        return;
+                    }
+                    
+                    const newLocation = {
+                        id: this.campusLocations.length + 1,
+                        campus: campus,
+                        type: type,
+                        location: locationName.trim(),
+                        buildingCode: 'NEW' + Math.floor(Math.random() * 1000),
+                        priority: priority,
+                        status: 'active'
+                    };
+                    
+                    this.campusLocations.push(newLocation);
+                    alert(`新地点已添加成功：\n\n地点：${newLocation.location}\n校区：${newLocation.campus}\n类型：${newLocation.type}\n优先级：${priority}`);
+                },
+                
+                // 位置验证方法
+                verifyLocation() {
+                    if (!this.aiResult) {
+                        alert('没有可验证的位置信息');
+                        return;
+                    }
+
+                    // 模拟位置验证逻辑
+                    // 在实际应用中，这里会调用浏览器的地理定位API
+                    const location = this.campusLocations.find(l => l.location === this.aiResult.location);
+
+                    if (!location) {
+                        this.locationMatchStatus = 'mismatched';
+                        this.locationVerified = false;
+                        alert('位置验证失败：该地点不在系统预设定位点中');
+                        return;
+                    }
+
+                    // 模拟位置匹配逻辑（演示系统总是匹配成功）
+                    // 在真实应用中，这里会比较GPS坐标
+                    const isMatch = Math.random() > 0.1; // 90%概率匹配成功，模拟真实情况
+
+                    if (isMatch) {
+                        this.locationMatchStatus = 'matched';
+                        this.locationVerified = true;
+                        alert(`位置验证成功！\n\n口述地点：${this.aiResult.location}\n实际位置：${location.location}\n校区：${location.campus}\n\n可以继续提交巡检记录`);
+                    } else {
+                        this.locationMatchStatus = 'mismatched';
+                        this.locationVerified = false;
+                        alert(`位置验证失败！\n\n口述地点：${this.aiResult.location}\n您的实际位置不匹配\n\n请确认您当前的实际位置`);
+                    }
+                },
+
+                // 地点筛选方法
+                filterLocations() {
+                    if (this.locationFilter === 'all') {
+                        this.filteredLocations = this.campusLocations;
+                    } else {
+                        this.filteredLocations = this.campusLocations.filter(l => l.campus === this.locationFilter);
+                    }
+                },
+
+                // 报表筛选方法
+                filterReports() {
+                    let result = this.allInspections;
+
+                    if (this.reportFilter !== 'all') {
+                        if (this.reportFilter === 'normal') {
+                            result = result.filter(r => r.result === '正常');
+                        } else if (this.reportFilter === 'abnormal') {
+                            result = result.filter(r => r.result === '异常');
+                        }
+                    }
+
+                    if (this.reportCampusFilter !== 'all') {
+                        result = result.filter(r => r.campus === this.reportCampusFilter);
+                    }
+
+                    this.filteredReports = result;
+                },
+
+                // 报表下钻筛选方法
+                filterByType(type) {
+                    this.reportFilter = type;
+                    this.filterReports();
+                    // 滚动到记录表格
+                    setTimeout(() => {
+                        document.querySelector('.overflow-x-auto')?.scrollIntoView({ behavior: 'smooth' });
+                    }, 100);
+                },
+
+                filterByCampus(campus) {
+                    this.reportCampusFilter = campus;
+                    this.filterReports();
+                    // 滚动到记录表格
+                    setTimeout(() => {
+                        document.querySelector('.overflow-x-auto')?.scrollIntoView({ behavior: 'smooth' });
+                    }, 100);
+                },
+
+                showInspectorDetails() {
+                    const inspectorNames = this.users
+                        .filter(u => u.role === 'inspector')
+                        .map(u => `${u.name} (${u.campus})`)
+                        .join('\n');
+                    alert(`活跃巡检员名单：\n\n${inspectorNames}\n\n共 ${this.users.filter(u => u.role === 'inspector').length} 名巡检员`);
+                },
+
+                // 用户管理方法
+                upgradeUserRole(userId) {
+                    const user = this.users.find(u => u.id === userId);
+                    if (!user || user.role === 'admin') return;
+
+                    const roleNames = { 'inspector': '巡检员', 'report': '报表查看', 'admin': '管理员' };
+                    const currentRole = roleNames[user.role];
+                    let nextRole = '';
+
+                    if (user.role === 'report') {
+                        nextRole = 'inspector';
+                    } else if (user.role === 'inspector') {
+                        nextRole = 'admin';
+                    }
+
+                    if (confirm(`确定要将用户 "${user.name}" 的角色从 ${currentRole} 升级为 ${roleNames[nextRole]} 吗？\n\n升级后该用户将获得${nextRole === 'admin' ? '完整的管理权限' : nextRole === 'inspector' ? '巡检操作权限' : '报表查看权限'}`)) {
+                        user.role = nextRole;
+                        alert(`用户 "${user.name}" 角色已更新为 ${roleNames[nextRole]}`);
+                    }
+                },
+
+                downgradeUserRole(userId) {
+                    const user = this.users.find(u => u.id === userId);
+                    if (!user || user.phone === '13800138888') {
+                        alert('初始管理员账户无法降级');
+                        return;
+                    }
+
+                    const roleNames = { 'inspector': '巡检员', 'report': '报表查看', 'admin': '管理员' };
+                    let nextRole = '';
+
+                    if (user.role === 'admin') {
+                        nextRole = 'inspector';
+                    } else if (user.role === 'inspector') {
+                        nextRole = 'report';
+                    }
+
+                    if (confirm(`确定要将用户 "${user.name}" 的角色从 ${roleNames[user.role]} 降级为 ${roleNames[nextRole]} 吗？\n\n降级后该用户将失去相应权限`)) {
+                        user.role = nextRole;
+                        alert(`用户 "${user.name}" 角色已更新为 ${roleNames[nextRole]}`);
+                    }
+                },
+
+                addNewUser() {
+                    const name = prompt('请输入用户姓名：');
+                    if (!name || !name.trim()) {
+                        alert('请输入有效的用户姓名');
+                        return;
+                    }
+
+                    const phone = prompt('请输入手机号：');
+                    if (!phone || !phone.trim()) {
+                        alert('请输入有效的手机号');
+                        return;
+                    }
+
+                    const role = prompt('请输入角色（inspector巡检员/report报表查看/admin管理员）：', 'inspector');
+                    if (!['inspector', 'report', 'admin'].includes(role)) {
+                        alert('角色必须是：inspector、report 或 admin');
+                        return;
+                    }
+
+                    const department = prompt('请输入部门（如：保卫处）：', '保卫处');
+                    if (!department || !department.trim()) {
+                        alert('请输入有效的部门');
+                        return;
+                    }
+
+                    const campus = prompt('请输入校区（望京校区/和平里校区）：', '望京校区');
+                    if (!campus || (campus !== '望京校区' && campus !== '和平里校区')) {
+                        alert('请输入有效的校区名称：望京校区 或 和平里校区');
+                        return;
+                    }
+
+                    const roleNames = { 'inspector': '巡检员', 'report': '报表查看', 'admin': '管理员' };
+
+                    const newUser = {
+                        id: this.users.length + 1,
+                        name: name.trim(),
+                        phone: phone.trim(),
+                        role: role,
+                        department: department.trim(),
+                        campus: campus
+                    };
+
+                    this.users.push(newUser);
+                    alert(`新用户已添加成功：\n\n姓名：${newUser.name}\n手机：${newUser.phone}\n角色：${roleNames[newUser.role]}\n部门：${newUser.department}\n校区：${newUser.campus}`);
+                },
+
+                // 功能管理方法
+                toggleFeature(featureName) {
+                    const featureNames = {
+                        'locationTracking': '巡查员定位功能',
+                        'modifyRecords': '巡查结果编辑权限',
+                        'aiProcessing': 'AI智能处理',
+                        'voiceInput': '语音输入功能',
+                        'notifications': '消息通知',
+                        'reportSharing': '报表分享'
+                    };
+
+                    const currentStatus = this.featureFlags[featureName];
+                    const action = currentStatus ? '关闭' : '启用';
+
+                    if (confirm(`确定要${action}"${featureNames[featureName]}"功能吗？\n\n${currentStatus ? '关闭后，相应功能将对巡检员不可用' : '启用后，巡检员将可以使用该功能'}`)) {
+                        this.featureFlags[featureName] = !currentStatus;
+                        localStorage.setItem('uibe_features', JSON.stringify(this.featureFlags));
+                        alert(`"${featureNames[featureName]}"已${action}成功`);
+                    }
+                },
+
+                // 报表导出方法
+                exportReport() {
+                    if (!this.featureFlags.reportSharing) {
+                        alert('报表分享功能已被管理员关闭，请联系系统管理员。');
+                        return;
+                    }
+
+                    // 模拟报表导出
+                    const csvContent = "data:text/csv;charset=utf-8," +
+                        "日期,巡检员,校区,地点,结果,问题\n" +
+                        this.filteredReports.map(r =>
+                            `${r.date},${r.inspector},${r.campus},${r.location},${r.result},${r.issue}`
+                        ).join("\n");
+
+                    const encodedUri = encodeURI(csvContent);
+                    const link = document.createElement("a");
+                    link.setAttribute("href", encodedUri);
+                    link.setAttribute("download", `UIBE巡检报表_${new Date().toISOString().split('T')[0]}.csv`);
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+
+                    alert('报表导出成功！\n\n已下载CSV格式的巡检数据报表');
+                },
+
+                // 计算属性：隐患问题统计
+                get issueStatistics() {
+                    const stats = {};
+                    this.allInspections
+                        .filter(r => r.result === '异常' && r.issue !== '设备设施运行正常')
+                        .forEach(r => {
+                            stats[r.issue] = (stats[r.issue] || 0) + 1;
+                        });
+                    return stats;
+                },
+
+                // 计算属性：巡检员绩效排行
+                get inspectorPerformance() {
+                    const performance = {};
+                    const inspectors = this.users.filter(u => u.role === 'inspector');
+
+                    inspectors.forEach(inspector => {
+                        const records = this.allInspections.filter(r => r.inspector === inspector.name);
+                        performance[inspector.name] = {
+                            id: inspector.id,
+                            name: inspector.name,
+                            campus: inspector.campus,
+                            count: records.length,
+                            normal: records.filter(r => r.result === '正常').length,
+                            abnormal: records.filter(r => r.result === '异常').length
+                        };
+                    });
+
+                    // 按巡检次数排序
+                    return Object.values(performance)
+                        .sort((a, b) => b.count - a.count)
+                        .slice(0, 6);
+                }
+            }));
+        });
+        
+        // 额外样式
+        StyleSheet = document.createElement('style');
+        StyleSheet.innerHTML = `
+            [x-cloak] { display: none !important; }
+            .uibe-admin-badge { background: linear-gradient(135deg, rgba(255,184,28,0.12), rgba(230,57,70,0.08)); color: #B45309; border: 1px solid rgba(255,184,28,0.2); }
+            .uibe-inspector-badge { background: linear-gradient(135deg, rgba(0,32,91,0.1), rgba(0,86,179,0.08)); color: var(--uibe-primary); border: 1px solid rgba(0,32,91,0.15); }
+            .uibe-role-badge { padding: 6px 14px; border-radius: 18px; font-size: 12px; font-weight: 600; letter-spacing: 0.3px; }
+            .cursor-pointer { cursor: pointer; }
+        `;
+        document.head.appendChild(StyleSheet);
+    </script>
+    
+</body>
+</html>

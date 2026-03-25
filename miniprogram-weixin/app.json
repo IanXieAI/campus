@@ -1,0 +1,68 @@
+{
+  "pages": [
+    "pages/login/login",
+    "pages/inspector/home/home",
+    "pages/inspector/input/input",
+    "pages/inspector/records/records",
+    "pages/inspector/hazards/hazards",
+    "pages/admin/home/home",
+    "pages/admin/users/users",
+    "pages/admin/features/features",
+    "pages/admin/reports/reports",
+    "pages/viewer/home/home"
+  ],
+  "window": {
+    "backgroundTextStyle": "light",
+    "navigationBarBackgroundColor": "#00205B",
+    "navigationBarTitleText": "UIBE CampusSafe",
+    "navigationBarTextStyle": "white",
+    "backgroundColor": "#F8FAFF"
+  },
+  "tabBar": {
+    "color": "#4A5568",
+    "selectedColor": "#00205B",
+    "backgroundColor": "#FFFFFF",
+    "borderStyle": "white",
+    "list": [
+      {
+        "pagePath": "pages/inspector/home/home",
+        "text": "工作台",
+        "iconPath": "images/icons/home.png",
+        "selectedIconPath": "images/icons/home-active.png"
+      },
+      {
+        "pagePath": "pages/inspector/input/input",
+        "text": "巡检",
+        "iconPath": "images/icons/inspect.png",
+        "selectedIconPath": "images/icons/inspect-active.png"
+      },
+      {
+        "pagePath": "pages/inspector/records/records",
+        "text": "记录",
+        "iconPath": "images/icons/records.png",
+        "selectedIconPath": "images/icons/records-active.png"
+      },
+      {
+        "pagePath": "pages/inspector/hazards/hazards",
+        "text": "隐患",
+        "iconPath": "images/icons/hazards.png",
+        "selectedIconPath": "images/icons/hazards-active.png"
+      }
+    ]
+  },
+  "permission": {
+    "scope.userLocation": {
+      "desc": "用于验证巡检位置"
+    },
+    "scope.record": {
+      "desc": "用于语音输入巡查描述"
+    },
+    "scope.camera": {
+      "desc": "用于拍摄巡检照片"
+    }
+  },
+  "requiredBackgroundModes": ["audio"],
+  "cloud": true,
+  "style": "v2",
+  "sitemapLocation": "sitemap.json"
+}

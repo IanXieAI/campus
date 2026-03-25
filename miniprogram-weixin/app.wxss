@@ -1,0 +1,403 @@
+/* 全局样式 */
+page {
+  background-color: #F8FAFF;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+  font-size: 28rpx;
+  line-height: 1.6;
+  color: #2D3748;
+}
+
+/* 对外经贸大学品牌色 */
+:root {
+  --uibe-primary: #00205B;
+  --uibe-secondary: #0056B3;
+  --uibe-accent: #E63946;
+  --uibe-light: #F8FAFF;
+  --uibe-warning: #FFB81C;
+  --uibe-success: #00A859;
+  --uibe-gray: #4A5568;
+}
+
+/* 容器 */
+.container {
+  padding: 30rpx;
+}
+
+/* 卡片样式 */
+.card {
+  background: #FFFFFF;
+  border-radius: 20rpx;
+  box-shadow: 0 8rpx 30rpx rgba(0, 32, 91, 0.08);
+  padding: 30rpx;
+  margin-bottom: 30rpx;
+}
+
+/* 按钮样式 */
+.btn-primary {
+  background: linear-gradient(135deg, #00205B 0%, #003D8F 100%);
+  color: #FFFFFF;
+  border-radius: 16rpx;
+  padding: 24rpx 60rpx;
+  font-size: 32rpx;
+  font-weight: 600;
+  box-shadow: 0 8rpx 24rpx rgba(0, 32, 91, 0.25);
+  border: none;
+}
+
+.btn-primary:active {
+  opacity: 0.8;
+  transform: scale(0.98);
+}
+
+.btn-secondary {
+  background: #FFFFFF;
+  color: #00205B;
+  border: 2rpx solid #00205B;
+  border-radius: 16rpx;
+  padding: 22rpx 56rpx;
+  font-size: 30rpx;
+  font-weight: 600;
+}
+
+.btn-danger {
+  background: linear-gradient(135deg, #EF4444 0%, #DC2626 100%);
+  color: #FFFFFF;
+  border-radius: 16rpx;
+  padding: 22rpx 56rpx;
+  font-size: 30rpx;
+  font-weight: 600;
+}
+
+/* 标签样式 */
+.tag {
+  display: inline-block;
+  padding: 8rpx 20rpx;
+  border-radius: 8rpx;
+  font-size: 24rpx;
+  font-weight: 500;
+}
+
+.tag-success {
+  background: rgba(0, 168, 89, 0.1);
+  color: #00A859;
+}
+
+.tag-warning {
+  background: rgba(255, 184, 28, 0.1);
+  color: #FFB81C;
+}
+
+.tag-danger {
+  background: rgba(230, 57, 70, 0.1);
+  color: #E63946;
+}
+
+.tag-high {
+  background: rgba(230, 57, 70, 0.15);
+  color: #E63946;
+}
+
+.tag-medium {
+  background: rgba(255, 184, 28, 0.15);
+  color: #FFB81C;
+}
+
+.tag-low {
+  background: rgba(0, 168, 89, 0.15);
+  color: #00A859;
+}
+
+/* 状态指示 */
+.status-dot {
+  width: 16rpx;
+  height: 16rpx;
+  border-radius: 50%;
+  display: inline-block;
+  margin-right: 12rpx;
+}
+
+.status-dot-success {
+  background: #00A859;
+}
+
+.status-dot-warning {
+  background: #FFB81C;
+}
+
+.status-dot-danger {
+  background: #E63946;
+}
+
+/* 列表项 */
+.list-item {
+  background: #FFFFFF;
+  padding: 30rpx;
+  margin-bottom: 20rpx;
+  border-radius: 16rpx;
+  box-shadow: 0 4rpx 16rpx rgba(0, 32, 91, 0.06);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.list-item:active {
+  background: #F7FAFC;
+}
+
+/* 标题样式 */
+.title {
+  font-size: 36rpx;
+  font-weight: 700;
+  color: #00205B;
+  margin-bottom: 20rpx;
+}
+
+.subtitle {
+  font-size: 30rpx;
+  font-weight: 600;
+  color: #4A5568;
+  margin-bottom: 16rpx;
+}
+
+.text {
+  font-size: 28rpx;
+  color: #4A5568;
+  line-height: 1.6;
+}
+
+.text-muted {
+  font-size: 24rpx;
+  color: #A0AEC0;
+}
+
+.text-primary {
+  color: #00205B;
+}
+
+.text-success {
+  color: #00A859;
+}
+
+.text-warning {
+  color: #FFB81C;
+}
+
+.text-danger {
+  color: #E63946;
+}
+
+/* 间距 */
+.mt-1 { margin-top: 20rpx; }
+.mt-2 { margin-top: 40rpx; }
+.mt-3 { margin-top: 60rpx; }
+.mb-1 { margin-bottom: 20rpx; }
+.mb-2 { margin-bottom: 40rpx; }
+.mb-3 { margin-bottom: 60rpx; }
+.pt-1 { padding-top: 20rpx; }
+.pt-2 { padding-top: 40rpx; }
+.pb-1 { padding-bottom: 20rpx; }
+.pb-2 { padding-bottom: 40rpx; }
+
+/* Flex布局 */
+.flex {
+  display: flex;
+}
+
+.flex-row {
+  flex-direction: row;
+}
+
+.flex-col {
+  flex-direction: column;
+}
+
+.justify-start {
+  justify-content: flex-start;
+}
+
+.justify-center {
+  justify-content: center;
+}
+
+.justify-end {
+  justify-content: flex-end;
+}
+
+.justify-between {
+  justify-content: space-between;
+}
+
+.items-center {
+  align-items: center;
+}
+
+.flex-1 {
+  flex: 1;
+}
+
+/* 文字对齐 */
+.text-left {
+  text-align: left;
+}
+
+.text-center {
+  text-align: center;
+}
+
+.text-right {
+  text-align: right;
+}
+
+/* 安全区域 */
+.safe-area-bottom {
+  padding-bottom: constant(safe-area-inset-bottom);
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+/* 加载状态 */
+.loading {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 60rpx 0;
+  color: #A0AEC0;
+  font-size: 28rpx;
+}
+
+/* 空状态 */
+.empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 120rpx 60rpx;
+  text-align: center;
+}
+
+.empty-icon {
+  font-size: 120rpx;
+  color: #CBD5E0;
+  margin-bottom: 30rpx;
+}
+
+.empty-text {
+  font-size: 28rpx;
+  color: #A0AEC0;
+  margin-bottom: 20rpx;
+}
+
+/* 徽章 */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 36rpx;
+  height: 36rpx;
+  padding: 0 12rpx;
+  background: #E63946;
+  color: #FFFFFF;
+  font-size: 20rpx;
+  font-weight: 600;
+  border-radius: 18rpx;
+  margin-left: 12rpx;
+}
+
+/* 分割线 */
+.divider {
+  height: 1rpx;
+  background: #E2E8F0;
+  margin: 30rpx 0;
+}
+
+/* 头像 */
+.avatar {
+  width: 80rpx;
+  height: 80rpx;
+  border-radius: 50%;
+  background: #CBD5E0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #FFFFFF;
+  font-size: 32rpx;
+  font-weight: 600;
+}
+
+/* 图标按钮 */
+.icon-btn {
+  width: 80rpx;
+  height: 80rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: rgba(0, 32, 91, 0.05);
+  color: #00205B;
+  font-size: 36rpx;
+  transition: all 0.3s;
+}
+
+.icon-btn:active {
+  background: rgba(0, 32, 91, 0.1);
+  transform: scale(0.95);
+}
+
+/* 输入框 */
+.input {
+  background: #F7FAFC;
+  border: 2rpx solid #E2E8F0;
+  border-radius: 16rpx;
+  padding: 24rpx 30rpx;
+  font-size: 30rpx;
+  color: #2D3748;
+}
+
+.input:focus {
+  border-color: #00205B;
+  background: #FFFFFF;
+}
+
+.textarea {
+  background: #F7FAFC;
+  border: 2rpx solid #E2E8F0;
+  border-radius: 16rpx;
+  padding: 24rpx 30rpx;
+  font-size: 30rpx;
+  color: #2D3748;
+  min-height: 200rpx;
+}
+
+/* 统计卡片 */
+.stat-card {
+  background: linear-gradient(135deg, #00205B 0%, #003D8F 100%);
+  border-radius: 20rpx;
+  padding: 40rpx 30rpx;
+  color: #FFFFFF;
+  box-shadow: 0 12rpx 40rpx rgba(0, 32, 91, 0.2);
+}
+
+.stat-value {
+  font-size: 72rpx;
+  font-weight: 700;
+  line-height: 1.2;
+  margin-bottom: 8rpx;
+}
+
+.stat-label {
+  font-size: 26rpx;
+  opacity: 0.8;
+}
+
+/* 网格布局 */
+.grid {
+  display: grid;
+  gap: 20rpx;
+}
+
+.grid-2 {
+  grid-template-columns: repeat(2, 1fr);
+}
+
+.grid-3 {
+  grid-template-columns: repeat(3, 1fr);
+}

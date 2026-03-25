@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UIBE CampusSafe - 对外经济贸易大学安全巡检系统</title>
+    <meta name="description" content="对外经济贸易大学安全巡检管理系统，采用AI智能识别技术，提供高效的校园安全巡检解决方案">
+    <meta name="keywords" content="对外经贸大学,安全巡检,AI识别,校园安全,智能管理">
+    <link rel="canonical" href="https://your-domain.com/">
+    
+    <!-- Open Graph -->
+    <meta property="og:title" content="UIBE CampusSafe - 对外经济贸易大学安全巡检系统">
+    <meta property="og:description" content="现代化校园安全巡检管理系统">
+    <meta property="og:type" content="website">
+    
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="UIBE CampusSafe">
+    <meta name="twitter:description" content="现代化校园安全巡检管理系统">
+    
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica Neue', 'Noto Sans SC', sans-serif;
+            background: linear-gradient(135deg, #00205B 0%, #003D8F 50%, #0056B3 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            padding: 20px;
+        }
+        .container {
+            text-align: center;
+            padding: 40px;
+            max-width: 700px;
+            width: 100%;
+        }
+        .logo {
+            font-size: 64px;
+            margin-bottom: 20px;
+            animation: float 3s ease-in-out infinite;
+        }
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+        }
+        h1 {
+            font-size: 48px;
+            font-weight: 700;
+            margin-bottom: 15px;
+            background: linear-gradient(135deg, #FFFFFF 0%, #E6EEFF 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            letter-spacing: -1px;
+        }
+        .subtitle {
+            font-size: 20px;
+            opacity: 0.9;
+            margin-bottom: 40px;
+            line-height: 1.6;
+            font-weight: 300;
+        }
+        .btn {
+            display: inline-block;
+            padding: 18px 56px;
+            background: rgba(255, 255, 255, 0.15);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 16px;
+            color: white;
+            text-decoration: none;
+            font-size: 18px;
+            font-weight: 600;
+            margin: 12px;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(20px);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+        }
+        .btn:hover {
+            background: rgba(255, 255, 255, 0.25);
+            border-color: rgba(255, 255, 255, 0.5);
+            transform: translateY(-3px);
+            box-shadow: 0 12px 32px rgba(0, 0, 0, 0.2);
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, #00A859 0%, #00C975 100%);
+            border-color: transparent;
+            box-shadow: 0 8px 24px rgba(0, 168, 89, 0.3);
+        }
+        .btn-primary:hover {
+            background: linear-gradient(135deg, #00C975 0%, #00EA91 100%);
+            transform: translateY(-3px);
+            box-shadow: 0 12px 32px rgba(0, 168, 89, 0.4);
+        }
+        .features {
+            margin-top: 60px;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 20px;
+            text-align: left;
+        }
+        .feature {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 24px;
+            border-radius: 16px;
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: all 0.3s ease;
+        }
+        .feature:hover {
+            background: rgba(255, 255, 255, 0.15);
+            transform: translateY(-5px);
+        }
+        .feature-icon {
+            font-size: 36px;
+            margin-bottom: 16px;
+        }
+        .feature-title {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #FFFFFF;
+        }
+        .feature-desc {
+            font-size: 13px;
+            opacity: 0.85;
+            line-height: 1.5;
+            color: rgba(255, 255, 255, 0.9);
+        }
+        .footer {
+            margin-top: 60px;
+            padding-top: 30px;
+            border-top: 1px solid rgba(255, 255, 255, 0.2);
+            font-size: 14px;
+            opacity: 0.7;
+        }
+        .footer a {
+            color: rgba(255, 255, 255, 0.8);
+            text-decoration: none;
+            margin: 0 10px;
+            transition: opacity 0.3s;
+        }
+        .footer a:hover {
+            opacity: 1;
+        }
+        .version {
+            display: inline-block;
+            background: rgba(255, 255, 255, 0.15);
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            margin-left: 10px;
+            vertical-align: middle;
+        }
+        @media (max-width: 768px) {
+            h1 { font-size: 36px; }
+            .logo { font-size: 48px; }
+            .subtitle { font-size: 18px; }
+            .container { padding: 20px; }
+            .features { grid-template-columns: 1fr 1fr; }
+            .btn { display: block; margin: 10px auto; width: 100%; max-width: 300px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="logo">🏛️</div>
+        <h1>UIBE CampusSafe <span class="version">v1.0</span></h1>
+        <p class="subtitle">对外经济贸易大学<br>安全巡检管理系统</p>
+        
+        <a href="app-fixed.html" class="btn btn-primary">进入系统 →</a>
+        
+        <div class="features">
+            <div class="feature">
+                <div class="feature-icon">🤖</div>
+                <div class="feature-title">AI智能识别</div>
+                <div class="feature-desc">自动识别地点、问题类型和风险等级</div>
+            </div>
+            <div class="feature">
+                <div class="feature-icon">🎤</div>
+                <div class="feature-title">语音输入</div>
+                <div class="feature-desc">支持语音转文字，提升巡检效率</div>
+            </div>
+            <div class="feature">
+                <div class="feature-icon">📍</div>
+                <div class="feature-title">位置验证</div>
+                <div class="feature-desc">GPS定位匹配，确保巡检真实性</div>
+            </div>
+            <div class="feature">
+                <div class="feature-icon">📊</div>
+                <div class="feature-title">数据报表</div>
+                <div class="feature-desc">实时统计分析，多维度数据展示</div>
+            </div>
+        </div>
+        
+        <div class="footer">
+            <p>© 2026 对外经济贸易大学</p>
+            <p style="margin-top: 10px;">
+                <a href="README.md" target="_blank">使用文档</a> ·
+                <a href="cloud-development-guide.md" target="_blank">云开发方案</a> ·
+                <a href="weixin-miniprogram-migration-guide.md" target="_blank">小程序指南</a>
+            </p>
+        </div>
+    </div>
+</body>
+</html>

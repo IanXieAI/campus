@@ -1,0 +1,505 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CampusSafe AI - 校园安全巡检助手</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/alpinejs" defer></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #065A82;    --secondary: #1C7293;    --accent: #21295C;
+            --light-bg: #F8FAFC;    --dark-bg: #0F172A;
+        }
+        * { font-family: 'Inter', sans-serif; }
+        body { background: linear-gradient(135deg, var(--light-bg) 0%, #E2E8F0 100%); min-height: 100vh; }
+        .luxury-glass {
+            background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(40px); border-radius: 24px;
+            border: 1px solid rgba(255, 255, 255, 0.25); box-shadow: 0 20px 40px rgba(6, 90, 130, 0.08);
+            transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .luxury-glass.dark { background: rgba(15, 23, 42, 0.85); border: 1px solid rgba(255, 255, 255, 0.1); }
+        .glass-card {
+            background: rgba(255, 255, 255, 0.7); backdrop-filter: blur(30px); border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.4); transition: all 0.3s ease;
+        }
+        .glass-card:hover { transform: translateY(-6px); box-shadow: 0 20px 40px rgba(6, 90, 130, 0.15); }
+        .magnetic-element { transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1); }
+        .magnetic-element:hover { transform: scale(1.05) translateY(-3px); }
+        .gradient-text { background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%); color: white;
+            font-weight: 600; border-radius: 16px; padding: 14px 32px; border: none;
+            box-shadow: 0 12px 24px rgba(6, 90, 130, 0.2); transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .btn-primary:hover { transform: translateY(-4px); box-shadow: 0 20px 40px rgba(6, 90, 130, 0.3); }
+        .theme-toggle { position: fixed; top: 24px; right: 24px; z-index: 100; }
+        .floating-nav { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); z-index: 50; }
+        .page-transition { opacity: 1; transform: translateY(0); transition: opacity 0.4s ease, transform 0.4s ease; }
+        .page-transition.hidden { opacity: 0; transform: translateY(20px); pointer-events: none; }
+        .role-inspector { background: rgba(6, 90, 130, 0.1); color: var(--primary); }
+        .role-admin { background: linear-gradient(135deg, rgba(249, 97, 103, 0.1), rgba(249, 231, 149, 0.1)); color: #B85042; }
+        .role-badge { padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; }
+        @keyframes float { 0%,100% { transform: translateY(0px); } 50% { transform: translateY(-10px); } }
+        .animate-float { animation: float 6s ease-in-out infinite; }
+    </style>
+</head>
+<body x-data="{
+    // Authentication state
+    isAuthenticated: localStorage.getItem('authenticated') === 'true',
+    currentUser: JSON.parse(localStorage.getItem('currentUser')) || null,
+    isAdmin: localStorage.getItem('isAdmin') === 'true',
+    
+    // Login state
+    loginForm: { phone: '', code: '' },
+    verificationCode: '123456',
+    isVerifyingCode: false,
+    
+    // App state
+    currentPage: isAuthenticated ? (isAdmin ? 'admin-dashboard' : 'home') : 'login',
+    darkMode: localStorage.getItem('darkMode') === 'true',
+    
+    // Sample data
+    users: [
+        { id: 1, name: '张三', phone: '13800138001', role: 'inspector', joinDate: '2026-01-15' },
+        { id: 2, name: '李四', phone: '13800138002', role: 'inspector', joinDate: '2026-02-20' },
+        { id: 3, name: '王五', phone: '13800138003', role: 'inspector', joinDate: '2026-02-28' },
+        { id: 4, name: '管理员', phone: '13800138888', role: 'admin', joinDate: '2026-01-01' }
+    ],
+    
+    // Feature flags
+    featureFlags: JSON.parse(localStorage.getItem('featureFlags')) || {
+        modifyRecords: true, locationTracking: true, aiProcessing: true,
+        voiceInput: true, notifications: true, reportSharing: true
+    },
+    
+    // Inspection data
+    todayStats: { inspections: 23, issues: 2, resolved: 1, pending: 1 },
+    inspections: [
+        { id: 1, userId: 1, location: '教学楼', status: 'normal', time: '21:30', date: '2026-03-23' },
+        { id: 2, userId: 2, location: '宿舍', status: 'warning', issue: '消防通道堵塞', time: '20:10', date: '2026-03-23' },
+        { id: 3, userId: 1, location: '食堂', status: 'normal', time: '19:00', date: '2026-03-23' },
+        { id: 4, userId: 3, location: '图书馆', status: 'normal', time: '18:30', date: '2026-03-23' }
+    ],
+    hazards: [
+        { id: 1, location: '教学楼', issue: '消防通道堵塞', status: 'pending' },
+        { id: 2, location: '宿舍', issue: '电线裸露', status: 'processing' },
+        { id: 3, location: '食堂', issue: '地面湿滑', status: 'resolved' }
+    ],
+    aiInput: '',
+    aiResult: null,
+    
+    // Methods
+    toggleDarkMode() {
+        this.darkMode = !this.darkMode; localStorage.setItem('darkMode', this.darkMode);
+    },
+    
+    loginWithCode() {
+        if (!this.loginForm.phone || !this.loginForm.code) {
+            alert('请输入手机号和验证码 (演示码: 123456)'); return;
+        }
+        if (this.loginForm.code !== this.verificationCode) {
+            alert('验证码错误，请使用 123456'); return;
+        }
+        
+        const user = this.users.find(u => u.phone === this.loginForm.phone);
+        if (user) {
+            this.currentUser = user; this.isAdmin = user.role === 'admin';
+        } else {
+            this.currentUser = {
+                id: this.users.length + 1, name: `用户${this.loginForm.phone.slice(-4)}`,
+                phone: this.loginForm.phone, role: 'inspector', joinDate: new Date().toISOString().split('T')[0]
+            };
+            this.users.push(this.currentUser); this.isAdmin = false;
+        }
+        
+        this.isAuthenticated = true; this.currentPage = this.isAdmin ? 'admin-dashboard' : 'home';
+        localStorage.setItem('authenticated', true); localStorage.setItem('currentUser', JSON.stringify(this.currentUser));
+        localStorage.setItem('isAdmin', this.isAdmin); this.loginForm = { phone: '', code: '' };
+    },
+    
+    sendVerificationCode() {
+        if (!this.loginForm.phone) { alert('请输入手机号'); return; }
+        this.isVerifyingCode = true; setTimeout(() => {
+            this.isVerifyingCode = false; alert(`验证码 123456 已发送到 ${this.loginForm.phone}`);
+        }, 1000);
+    },
+    
+    loginWithWeChat() {
+        this.currentUser = { id: 5, name: '微信用户', phone: 'wechat-user', role: 'inspector', joinDate: new Date().toISOString().split('T')[0] };
+        this.isAuthenticated = true; this.isAdmin = false; this.currentPage = 'home';
+        localStorage.setItem('authenticated', true); localStorage.setItem('currentUser', JSON.stringify(this.currentUser));
+        localStorage.setItem('isAdmin', false); alert('微信登录成功！默认身份：巡检员');
+    },
+    
+    logout() {
+        this.isAuthenticated = false; this.currentUser = null; this.currentPage = 'login';
+        localStorage.removeItem('authenticated'); localStorage.removeItem('currentUser'); localStorage.removeItem('isAdmin');
+    },
+    
+    navigateTo(page) { this.currentPage = page; },
+    
+    // Admin methods
+    toggleUserRole(userId) {
+        const user = this.users.find(u => u.id === userId); if (!user) return;
+        const newRole = user.role === 'admin' ? 'inspector' : 'admin';
+        if (confirm(`确定要将 ${user.name} 转为 ${newRole === 'admin' ? '管理员' : '巡检员'}？`)) {
+            user.role = newRole;
+            if (this.currentUser && this.currentUser.id === userId) {
+                this.currentUser.role = newRole; this.isAdmin = newRole === 'admin';
+                localStorage.setItem('currentUser', JSON.stringify(this.currentUser)); localStorage.setItem('isAdmin', this.isAdmin);
+            }
+            localStorage.setItem('users', JSON.stringify(this.users));
+        }
+    },
+    
+    toggleFeature(feature) {
+        this.featureFlags[feature] = !this.featureFlags[feature];
+        localStorage.setItem('featureFlags', JSON.stringify(this.featureFlags));
+    },
+    
+    // Inspection methods
+    simulateAIProcessing() {
+        const input = this.aiInput.toLowerCase(); let location = '未知地点', result = '正常', issue = '无', severity = 'low';
+        if (input.includes('教学楼')) location = '教学楼'; if (input.includes('宿舍')) location = '宿舍';
+        if (input.includes('食堂')) location = '食堂'; if (input.includes('消防')) location = '教学楼';
+        if (input.includes('堵塞') || input.includes('问题') || input.includes('异常')) {
+            result = '异常'; issue = input.includes('消防') ? '消防通道堵塞' : '存在安全隐患';
+            severity = input.includes('消防') ? 'high' : 'medium';
+        }
+        this.aiResult = { location, result, issue, severity, timestamp: new Date().toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' }) };
+        this.navigateTo('ai-result');
+    },
+    
+    confirmInspection() {
+        this.inspections.unshift({
+            id: this.inspections.length + 1, userId: this.currentUser?.id || 1,
+            location: this.aiResult.location, status: this.aiResult.result === '异常' ? 'warning' : 'normal',
+            time: this.aiResult.timestamp, date: new Date().toISOString().split('T')[0],
+            issue: this.aiResult.result === '异常' ? this.aiResult.issue : ''
+        });
+        
+        if (this.aiResult.result === '异常') {
+            const hazardExists = this.hazards.some(h => h.location === this.aiResult.location && h.issue === this.aiResult.issue);
+            if (!hazardExists) {
+                this.hazards.push({ id: this.hazards.length + 1, location: this.aiResult.location, issue: this.aiResult.issue, status: 'pending' });
+                this.todayStats.issues++; this.todayStats.pending++;
+            }
+        }
+        
+        this.todayStats.inspections++; this.aiInput = ''; this.aiResult = null; this.navigateTo('records');
+    },
+    
+    // Report methods
+    exportReport() { alert(`导出报表：共 ${this.inspections.length} 条巡检记录`); }
+}" :class="{ 'dark': darkMode }" class="transition-all duration-500">
+    
+    <!-- Theme Toggle -->
+    <div class="theme-toggle">
+        <button @click="toggleDarkMode" class="luxury-glass p-3 rounded-full magnetic-element">
+            <i x-show="!darkMode" class="fas fa-moon text-gray-600"></i>
+            <i x-show="darkMode" class="fas fa-sun text-yellow-400"></i>
+        </button>
+    </div>
+    
+    <!-- Logout Button -->
+    <template x-if="isAuthenticated">
+        <div class="fixed top-4 left-4 z-50">
+            <button @click="logout" class="bg-gradient-to-r from-red-500 to-orange-500 text-white font-semibold px-4 py-2 rounded-lg">
+                <i class="fas fa-sign-out-alt mr-2"></i>退出登录
+            </button>
+        </div>
+    </template>
+    
+    <!-- Main Container -->
+    <div class="max-w-lg mx-auto p-6 pt-20 pb-32">
+    
+        <!-- Login Page -->
+        <div x-show="currentPage === 'login'" x-transition.opacity.duration.400ms class="page-transition">
+            <div class="luxury-glass p-8">
+                <h1 class="text-4xl font-bold mb-2 gradient-text text-center">CampusSafe AI</h1>
+                <p class="text-xl font-medium text-gray-600 dark:text-gray-300 text-center mb -8">校园安全巡检助手</p>
+                <button @click="loginWithWeChat" class="glass-card w-full p-4 flex items-center justify-center gap-4 magnetic-element animate-float mb-6">
+                    <i class="fab fa-weixin text-3xl text-green-500"></i><span class="text-xl font-semibold">微信扫码登录</span>
+                </button>
+                <div class="text-center text-gray-500 dark:text-gray-400 mb-8">或使用手机号登录</div>
+                <div class="space-y-4">
+                    <input type="tel" x-model="loginForm.phone" placeholder="手机号" class="w-full glass-card p-4 rounded-xl">
+                    <div class="flex gap-2">
+                        <input type="text" x-model="loginForm.code" placeholder="验证码" class="flex-1 glass-card p-4 rounded-xl">
+                        <button @click="sendVerificationCode" :disabled="isVerifyingCode" class="glass-card px-4 rounded-xl font-semibold">
+                            <span x-show="!isVerifyingCode">获取验证码</span><span x-show="isVerifyingCode">发送中...</span>
+                        </button>
+                    </div>
+                    <div class="text-xs text-gray-500"><i class="fas fa-info-circle mr-1"></i>演示验证码：123456</div>
+                    <button @click="loginWithCode" class="btn-primary w-full py-4 text-lg rounded-2xl magnetic-element">
+                        <i class="fas fa-sign-in-alt mr-2"></i>登录/注册
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Inspector Home -->
+        <div x-show="currentPage === 'home' && !isAdmin" x-transition.opacity.duration.400ms class="page-transition">
+            <div class="luxury-glass p-8 mb-6">
+                <div class="flex justify-between items-start">
+                    <div><h1 class="text-4xl font-bold mb-2 gradient-text">CampusSafe AI</h1><p class="text-xl font-medium text-gray-600">校园安全巡检助手</p></div>
+                    <span class="role-badge role-inspector">巡检员</span>
+                </div>
+                <div class="mt-8">
+                    <p class="flex items-center gap-2"><i class="fas fa-user-circle text-primary"></i><span>当前用户：</span><span class="text-2xl font-bold gradient-text" x-text="currentUser?.name"></span></p>
+                </div>
+            </div>
+            <div class="mb-8">
+                <button @click="navigateTo('input')" class="btn-primary w-full text-xl py-6 rounded-2xl flex items-center justify-center gap-4 magnetic-element animate-float">
+                    <i class="fas fa-play-circle text-2xl"></i><span class="text-2xl font-bold">开始巡检</span><i class="fas fa-arrow-right text-2xl"></i>
+                </button>
+                <p class="text-center text-gray-500">点击进入输入页面</p>
+            </div>
+            <div class="luxury-glass p-6 mb-6">
+                <h2 class="text-2xl font-bold mb-4"><i class="fas fa-chart-bar gradient-text"></i> 今日数据</h2>
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="glass-card p-4 text-center"><p class="text-gray-500 mb-1">已巡检</p><p class="text-3xl font-bold gradient-text" x-text="todayStats.inspections"></p></div>
+                    <div class="glass-card p-4 text-center"><p class="text-gray-500 mb-1">发现问题</p><p class="text-3xl font-bold text-red-500" x-text="todayStats.issues"></p></div>
+                </div>
+            </div>
+            <div class="luxury-glass p-6">
+                <h2 class="text-2xl font-bold mb-4"><i class="fas fa-th-large gradient-text"></i> 功能入口</h2>
+                <div class="grid grid-cols-2 gap-4">
+                    <button @click="navigateTo('records')" class="glass-card p-4 flex flex-col items-center"><i class="fas fa-clipboard-list text-3xl gradient-text mb-2"></i><span class="font-semibold">巡检记录</span></button>
+                    <button @click="navigateTo('hazards')" class="glass-card p-4 flex flex-col items-center"><i class="fas fa-exclamation-circle text-3xl text-red-500 mb-2"></i><span class="font-semibold">隐患列表</span></button>
+                    <button @click="navigateTo('report')" class="glass-card p-4 flex flex-col items-center"><i class="fas fa-file-chart-column text-3xl gradient-text mb-2"></i><span class="font-semibold">今日报告</span></button>
+                    <button class="glass-card p-4 flex flex-col items-center"><i class="fas fa-user-cog text-3xl gradient-text mb-2"></i><span class="font-semibold">个人中心</span></button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Admin Dashboard -->
+        <div x-show="currentPage === 'admin-dashboard' && isAdmin" x-transition.opacity.duration.400ms class="page-transition">
+            <div class="luxury-glass p-8 mb-6">
+                <div class="flex justify-between items-start">
+                    <div><h1 class="text-4xl font-bold mb-2 gradient-text">CampusSafe AI</h1><p class="text-xl font-medium text-gray-600">管理员控制台</p></div>
+                    <span class="role-badge role-admin">管理员</span>
+                </div>
+                <div class="mt-8">
+                    <p class="flex items-center gap-2"><i class="fas fa-crown text-yellow-500"></i><span>管理员：</span><span class="text-2xl font-bold" x-text="currentUser?.name"></span></p>
+                </div>
+            </div>
+            
+            <!-- Admin Navigation -->
+            <div class="luxury-glass p-6 mb-6">
+                <h2 class="text-2xl font-bold mb-4">管理模块</h2>
+                <div class="grid grid-cols-3 gap-4">
+                    <button @click="navigateTo('admin-users')" class="glass-card p-4 text-center magnetic-element">
+                        <i class="fas fa-users text-2xl gradient-text mb-2"></i><span class="font-semibold">用户管理</span>
+                    </button>
+                    <button @click="navigateTo('admin-features')" class="glass-card p-4 text-center magnetic-element">
+                        <i class="fas fa-toggle-on text-2xl gradient-text mb-2"></i><span class="font-semibold">功能管理</span>
+                    </button>
+                    <button @click="navigateTo('admin-reports')" class="glass-card p-4 text-center magnetic-element">
+                        <i class="fas fa-chart-bar text-2xl gradient-text mb-2"></i><span class="font-semibold">数据报表</span>
+                    </button>
+                </div>
+            </div>
+            
+            <!-- System Overview -->
+            <div class="glass-card p-6 mb-6">
+                <h3 class="text-xl font-bold mb-4">系统概览</h3>
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="text-center p-4 bg-blue-50 rounded-xl">
+                        <p class="text-gray-500 mb-1">巡检员</p>
+                        <p class="text-3xl font-bold gradient-text" x-text="users.filter(u => u.role === 'inspector').length"></p>
+                    </div>
+                    <div class="text-center p-4 bg-yellow-50 rounded-xl">
+                        <p class="text-gray-500 mb-1">管理员</p>
+                        <p class="text-3xl font-bold text-yellow-600" x-text="users.filter(u => u.role === 'admin').length"></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Admin Users -->
+        <div x-show="currentPage === 'admin-users'" x-transition.opacity.duration.400ms class="page-transition">
+            <div class="luxury-glass p-6">
+                <button @click="navigateTo('admin-dashboard')" class="mb-4 p-2 rounded-lg hover:bg-gray-100"><i class="fas fa-arrow-left"></i> 返回</button>
+                <h2 class="text-2xl font-bold mb-4">用户管理</h2>
+                <div class="space-y-4">
+                    <template x-for="user in users" :key="user.id">
+                        <div class="glass-card p-4">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <span class="font-bold" x-text="user.name"></span>
+                                    <span :class="user.role === 'admin' ? 'role-admin' : 'role-inspector'" class="role-badge ml-2">
+                                        <span x-text="user.role === 'admin' ? '管理员' : '巡检员'"></span>
+                                    </span>
+                                    <p class="text-sm text-gray-500" x-text="'手机：' + user.phone"></p>
+                                </div>
+                                <button @click="toggleUserRole(user.id)" 
+                                        :class="user.role === 'admin' ? 'bg-yellow-100 text-yellow-800' : 'bg-blue-100 text-blue-800'"
+                                        class="px-3 py-1 rounded-lg text-sm font-semibold">
+                                    <span x-text="user.role === 'admin' ? '↓ 降级' : '↑ 升级'"></span>
+                                </button>
+                            </div>
+                        </div>
+                    </template>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Admin Features -->
+        <div x-show="currentPage === 'admin-features'" x-transition.opacity.duration.400ms class="page-transition">
+            <div class="luxury-glass p-6">
+                <button @click="navigateTo('admin-dashboard')" class="mb-4 p-2 rounded-lg hover:bg-gray-100"><i class="fas fa-arrow-left"></i> 返回</button>
+                <h2 class="text-2xl font-bold mb-4">功能管理</h2>
+                <div class="space-y-4">
+                    <div class="glass-card p-4 flex items-center justify-between">
+                        <div><span class="font-bold">记录修改功能</span><p class="text-sm text-gray-500">允许巡检员修改记录</p></div>
+                        <label class="relative inline-flex items-center cursor-pointer">
+                            <input type="checkbox" x-model="featureFlags.modifyRecords" @change="toggleFeature('modifyRecords')" class="sr-only peer">
+                            <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                        </label>
+                    </div>
+                    <div class="glass-card p-4 flex items-center justify-between">
+                        <div><span class="font-bold">定位功能</span><p class="text-sm text-gray-500">开启地理位置获取</p></div>
+                        <label class="relative inline-flex items-center cursor-pointer">
+                            <input type="checkbox" x-model="featureFlags.locationTracking" @change="toggleFeature('locationTracking')" class="sr-only peer">
+                            <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                        </label>
+                    </div>
+                    <div class="glass-card p-4 flex items-center justify-between">
+                        <div><span class="font-bold">AI处理功能</span><p class="text-sm text-gray-500">启用AI自动识别</p></div>
+                        <label class="relative inline-flex items-center cursor-pointer">
+                            <input type="checkbox" x-model="featureFlags.aiProcessing" @change="toggleFeature('aiProcessing')" class="sr-only peer">
+                            <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                        </label>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Admin Reports -->
+        <div x-show="currentPage === 'admin-reports'" x-transition.opacity.duration.400ms class="page-transition">
+            <div class="luxury-glass p-6">
+                <button @click="navigateTo('admin-dashboard')" class="mb-4 p-2 rounded-lg hover:bg-gray-100"><i class="fas fa-arrow-left"></i> 返回</button>
+                <h2 class="text-2xl font-bold mb-4">数据报表</h2>
+                <div class="glass-card p-6 mb-6">
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="text-center p-4 bg-gray-50 rounded-xl">
+                            <p class="text-gray-500 mb-1">总巡检记录</p>
+                            <p class="text-3xl font-bold gradient-text" x-text="inspections.length"></p>
+                        </div>
+                        <div class="text-center p-4 bg-green-50 rounded-xl">
+                            <p class="text-gray-500 mb-1">系统用户</p>
+                            <p class="text-3xl font-bold text-green-600" x-text="users.length"></p>
+                        </div>
+                    </div>
+                </div>
+                <button @click="exportReport" class="btn-primary w-full py-4 text-lg rounded-2xl magnetic-element">
+                    <i class="fas fa-download mr-2"></i>导出完整报表
+                </button>
+                <div class="mt-6">
+                    <h3 class="text-lg font-bold mb-3">数据筛选</h3>
+                    <div class="glass-card p-4">
+                        <div class="space-y-3">
+                            <label class="block text-gray-600">按地点筛选</label>
+                            <select class="w-full glass-card p-3 rounded-lg">
+                                <option>全部地点</option><option>教学楼</option><option>宿舍</option><option>食堂</option>
+                            </select>
+                            <label class="block text-gray-600">按日期范围</label>
+                            <input type="date" class="w-full glass-card p-3 rounded-lg mb-2">
+                            <input type="date" class="w-full glass-card p-3 rounded-lg">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Navigation for Inspector -->
+        <template x-if="isAuthenticated && !isAdmin">
+            <div class="floating-nav luxury-glass p-4 flex gap-4 items-center">
+                <button @click="navigateTo('home')" :class="{'text-primary font-semibold': currentPage === 'home'}" class="p-2 rounded-lg"><i class="fas fa-home text-lg"></i></button>
+                <button @click="navigateTo('input')" :class="{'text-primary font-semibold': currentPage === 'input'}" class="p-2 rounded-lg"><i class="fas fa-plus-circle text-lg"></i></button>
+                <button @click="navigateTo('records')" :class="{'text-primary font-semibold': currentPage === 'records'}" class="p-2 rounded-lg"><i class="fas fa-list text-lg"></i></button>
+                <button @click="navigateTo('report')" :class="{'text-primary font-semibold': currentPage === 'report'}" class="p-2 rounded-lg"><i class="fas fa-chart-pie text-lg"></i></button>
+            </div>
+        </template>
+        
+        <!-- Input Page -->
+        <div x-show="currentPage === 'input'" x-transition.opacity.duration.400ms class="page-transition">
+            <div class="luxury-glass p-6">
+                <button @click="navigateTo('home')" class="mb-4 p-2 rounded-lg"><i class="fas fa-arrow-left"></i> 返回</button>
+                <h2 class="text-2xl font-bold mb-4">巡检记录输入</h2>
+                <textarea x-model="aiInput" rows="4" class="w-full glass-card p-4 rounded-2xl mb-4" placeholder="请描述巡检情况...例如：刚检查了教学楼，消防通道堵塞"></textarea>
+                <button @click="simulateAIProcessing" class="btn-primary w-full py-4 text-lg">提交AI处理</button>
+            </div>
+        </div>
+        
+        <!-- AI Result -->
+        <div x-show="currentPage === 'ai-result'" x-transition.opacity.duration.400ms class="page-transition">
+            <div class="luxury-glass p-6">
+                <button @click="navigateTo('input')" class="mb-4 p-2 rounded-lg"><i class="fas fa-arrow-left"></i> 返回</button>
+                <h2 class="text-2xl font-bold mb-4">AI识别结果</h2>
+                <template x-if="aiResult">
+                    <div class="space-y-4 mb-6">
+                        <div class="glass-card p-4"><span class="text-gray-500">地点：</span><span class="text-xl font-bold" x-text="aiResult.location"></span></div>
+                        <div class="glass-card p-4"><span class="text-gray-500">状态：</span><span class="text-xl font-bold" x-text="aiResult.result"></span></div>
+                        <div class="glass-card p-4"><span class="text-gray-500">问题：</span><span class="text-xl font-bold" x-text="aiResult.issue"></span></div>
+                        <div class="glass-card p-4"><span class="text-gray-500">等级：</span><span class="text-xl font-bold" x-text="aiResult.severity"></span></div>
+                    </div>
+                </template>
+                <div class="flex gap-4">
+                    <button @click="navigateTo('input')" class="flex-1 glass-card py-4 rounded-2xl">修改</button>
+                    <button @click="confirmInspection" class="flex-1 btn-primary py-4 rounded-2xl">确认提交</button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Records Page -->
+        <div x-show="currentPage === 'records'" x-transition.opacity.duration.400ms class="page-transition">
+            <div class="luxury-glass p-6">
+                <button @click="navigateTo('home')" class="mb-4 p-2 rounded-lg"><i class="fas fa-arrow-left"></i> 返回</button>
+                <h2 class="text-2xl font-bold mb-4">巡检记录</h2>
+                <div class="space-y-3">
+                    <template x-for="inspection in inspections.slice(0, 5)" :key="inspection.id">
+                        <div class="glass-card p-4 flex items-center justify-between">
+                            <div><span class="font-bold" x-text="inspection.location"></span><p class="text-gray-500" x-text="inspection.issue || '正常'"></p></div>
+                            <div class="text-gray-500" x-text="inspection.time"></div>
+                        </div>
+                    </template>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Report Page -->
+        <div x-show="currentPage === 'report'" x-transition.opacity.duration.400ms class="page-transition">
+            <div class="luxury-glass p-6">
+                <button @click="navigateTo('home')" class="mb-4 p-2 rounded-lg"><i class="fas fa-arrow-left"></i> 返回</button>
+                <h2 class="text-2xl font-bold mb-4">今日巡检报告</h2>
+                <div class="grid grid-cols-2 gap-4 mb-6">
+                    <div class="glass-card p-4 text-center"><p class="text-gray-500 mb-1">巡检次数</p><p class="text-3xl font-bold gradient-text" x-text="todayStats.inspections"></p></div>
+                    <div class="glass-card p-4 text-center"><p class="text-gray-500 mb-1">发现隐患</p><p class="text-3xl font-bold text-red-500" xtext="todayStats.issues"></p></div>
+                </div>
+                <button @click="alert('日报已发送给领导！')" class="btn-primary w-full py-4 text-lg">发送给领导</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Initialize page from hash
+        document.addEventListener('alpine:init', () => {
+            Alpine.data('init', () => ({
+                init() {
+                    const hash = window.location.hash.substring(1);
+                    if (hash && ['home','input','records','report','ai-result','admin-dashboard','admin-users','admin-features','admin-reports'].includes(hash)) {
+                        this.currentPage = hash;
+                    }
+                    this.$watch('currentPage', (page) => {
+                        window.location.hash = page;
+                    });
+                }
+            }));
+        });
+    </script>
+</body>
+</html>

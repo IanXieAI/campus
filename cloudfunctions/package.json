@@ -1,0 +1,9 @@
+{
+  "name": "uibe-campus-safe-cloudfunctions",
+  "version": "1.0.0",
+  "description": "对外经济贸易大学安全巡检系统云函数",
+  "main": "index.js",
+  "dependencies": {
+    "wx-server-sdk": "~2.6.3"
+  }
+}
