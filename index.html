@@ -908,13 +908,15 @@
                                               :class="location.campus === '望京校区' ? 'bg-blue-100 text-blue-700' : 'bg-orange-100 text-orange-700'"
                                               x-text="location.campus"></span>
                                     </div>
-                                    <div class="grid grid-cols-3 gap-4 text-sm text-gray-600">
+                                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm text-gray-600">
                                         <div><i class="fas fa-building mr-1"></i>类型：<span x-text="location.type"></span></div>
                                         <div><i class="fas fa-code mr-1"></i>编码：<span x-text="location.buildingCode"></span></div>
                                         <div><i class="fas fa-check-circle mr-1"></i>状态：
                                             <span :class="location.status === 'active' ? 'text-green-600' : 'text-gray-400'" 
                                                   x-text="location.status === 'active' ? '启用' : '禁用'"></span>
                                         </div>
+                                        <div><i class="fas fa-bullseye mr-1"></i>范围：<span x-text="location.radius || '--'"></span> 米</div>
+                                        <div class="md:col-span-2"><i class="fas fa-location-dot mr-1"></i>坐标：<span class="font-mono text-xs" x-text="(location.lat ?? '--') + ', ' + (location.lng ?? '--')"></span></div>
                                     </div>
                                 </div>
                                 <div class="flex gap-2">
@@ -922,6 +924,11 @@
                                             :class="location.status === 'active' ? 'bg-yellow-100 hover:bg-yellow-200 text-yellow-700' : 'bg-green-100 hover:bg-green-200 text-green-700'"
                                             class="px-3 py-2 rounded-lg text-sm font-semibold transition-colors cursor-pointer">
                                         <i :class="location.status === 'active' ? 'fas fa-toggle-on' : 'fas fa-toggle-off'"></i>
+                                    </button>
+                                    <button @click="setLocationFromCurrentPosition(location.id)"
+                                            class="px-3 py-2 bg-green-100 hover:bg-green-200 text-green-700 rounded-lg text-sm font-semibold transition-colors cursor-pointer"
+                                            title="使用当前实时位置修正坐标">
+                                        <i class="fas fa-crosshairs"></i>
                                     </button>
                                     <button @click="editLocation(location.id)"
                                             class="px-3 py-2 bg-blue-100 hover:bg-blue-200 text-blue-700 rounded-lg text-sm font-semibold transition-colors cursor-pointer">
@@ -2246,13 +2253,70 @@
                 editLocation(locationId) {
                     const location = this.campusLocations.find(l => l.id === locationId);
                     if (!location) return;
-                    
-                    const newLocation = prompt(`请编辑地点名称：`, location.location);
-                    if (newLocation && newLocation.trim() && newLocation !== location.location) {
-                        const oldName = location.location;
-                        location.location = newLocation.trim();
-                        alert(`地点名称已更新：\n从 "${oldName}" 更新为 "${location.location}"`);
+
+                    const newLocationName = prompt('请编辑地点名称：', location.location);
+                    if (!newLocationName || !newLocationName.trim()) {
+                        alert('地点名称不能为空');
+                        return;
                     }
+
+                    const newLat = prompt('请编辑纬度（latitude）：', String(location.lat ?? ''));
+                    if (newLat === null) return;
+                    const parsedLat = Number(newLat);
+                    if (Number.isNaN(parsedLat)) {
+                        alert('纬度格式不正确');
+                        return;
+                    }
+
+                    const newLng = prompt('请编辑经度（longitude）：', String(location.lng ?? ''));
+                    if (newLng === null) return;
+                    const parsedLng = Number(newLng);
+                    if (Number.isNaN(parsedLng)) {
+                        alert('经度格式不正确');
+                        return;
+                    }
+
+                    const newRadius = prompt('请编辑允许定位范围（米）：', String(location.radius ?? 120));
+                    if (newRadius === null) return;
+                    const parsedRadius = Number(newRadius);
+                    if (Number.isNaN(parsedRadius) || parsedRadius <= 0) {
+                        alert('允许范围必须是大于0的数字');
+                        return;
+                    }
+
+                    location.location = newLocationName.trim();
+                    location.lat = parsedLat;
+                    location.lng = parsedLng;
+                    location.radius = parsedRadius;
+                    this.filterLocations();
+                    alert(`巡查点位已更新：\n\n地点：${location.location}\n纬度：${location.lat}\n经度：${location.lng}\n允许范围：${location.radius} 米`);
+                },
+
+                setLocationFromCurrentPosition(locationId) {
+                    const location = this.campusLocations.find(l => l.id === locationId);
+                    if (!location) return;
+
+                    if (!navigator.geolocation) {
+                        alert('当前浏览器不支持GPS定位，无法自动校准坐标');
+                        return;
+                    }
+
+                    navigator.geolocation.getCurrentPosition(
+                        (pos) => {
+                            location.lat = Number(pos.coords.latitude.toFixed(6));
+                            location.lng = Number(pos.coords.longitude.toFixed(6));
+                            if (!location.radius) {
+                                location.radius = 120;
+                            }
+                            this.filterLocations();
+                            alert(`已使用当前实时位置修正坐标：\n\n地点：${location.location}\n纬度：${location.lat}\n经度：${location.lng}\n建议允许范围：${location.radius} 米`);
+                        },
+                        (err) => {
+                            console.error('管理员校准坐标失败:', err);
+                            alert('无法获取当前位置，请确认浏览器已允许定位权限');
+                        },
+                        { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+                    );
                 },
                 
                 addNewLocation() {
@@ -2287,7 +2351,10 @@
                         location: locationName.trim(),
                         buildingCode: 'NEW' + Math.floor(Math.random() * 1000),
                         priority: priority,
-                        status: 'active'
+                        status: 'active',
+                        lat: 0,
+                        lng: 0,
+                        radius: 120
                     };
                     
                     this.campusLocations.push(newLocation);
