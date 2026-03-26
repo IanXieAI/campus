@@ -7,6 +7,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/alpinejs@3.13.8/dist/cdn.min.js" defer></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Poppins:wght@400;500;600;700&family=Noto+Sans+SC:wght@300;400;500;700&display=swap');
         
@@ -188,6 +189,24 @@
         .text-left { text-align: left; }
         .mx-auto { margin-left: auto; margin-right: auto; }
         .px-4 { padding-left: 1rem; padding-right: 1rem; }
+
+        /* 全屏录音覆盖层 */
+        .recording-overlay {
+            background: linear-gradient(160deg, #00205B 0%, #003D8F 60%, #0056B3 100%);
+        }
+        .wave-bar {
+            width: 7px;
+            min-height: 6px;
+            border-radius: 4px;
+            background: rgba(255,255,255,0.85);
+            animation: wavePulse 0.55s ease-in-out infinite alternate;
+        }
+        @keyframes wavePulse {
+            0% { height: 6px; opacity: 0.3; }
+            100% { height: 52px; opacity: 1; }
+        }
+        /* photo thumbnail */
+        .photo-thumb { width: 80px; height: 80px; object-fit: cover; border-radius: 12px; }
     </style>
 </head>
 <body x-data="appState" x-init="init()" class="uibe-page-transition">
@@ -249,6 +268,13 @@
                             </div>
                         </template>
                     </div>
+                       <template x-if="isAuthenticated">
+                           <button @click="logout()"
+                                   class="flex items-center gap-2 px-4 py-2 bg-red-50 hover:bg-red-100 text-red-600 font-semibold rounded-xl transition-colors cursor-pointer border border-red-200 ml-2">
+                               <i class="fas fa-sign-out-alt"></i>
+                               <span class="text-sm hidden sm:inline">退出登录</span>
+                           </button>
+                       </template>
                 </div>
             </div>
         </div>
@@ -469,16 +495,18 @@
 
                     <!-- 圆形录音按钮 -->
                     <div class="flex flex-col items-center justify-center mb-6">
-                        <button @click="toggleVoiceInput()"
-                                :style="isRecording ? 'background: linear-gradient(135deg, #EF4444 0%, #DC2626 100%); box-shadow: 0 20px 60px rgba(239, 68, 68, 0.5);' : 'background: linear-gradient(135deg, #00205B 0%, #003D8F 100%); box-shadow: 0 20px 60px rgba(0, 32, 91, 0.4);'"
-                                :class="isRecording ? 'animate-pulse' : ''"
-                                class="w-28 h-28 rounded-full flex items-center justify-center transition-all duration-300 cursor-pointer z-10 hover:scale-110 active:scale-95"
-                                style="pointer-events: auto;">
-                            <i :class="isRecording ? 'fas fa-stop text-4xl' : 'fas fa-microphone text-5xl'" class="text-white"></i>
+                        <button @mousedown.prevent="startVoiceRecording()"
+                                @touchstart.prevent="startVoiceRecording()"
+                                @mouseup="stopVoiceRecording()"
+                                @touchend="stopVoiceRecording()"
+                                @mouseleave="if(isRecording) stopVoiceRecording()"
+                                style="background: linear-gradient(135deg, #00205B 0%, #003D8F 100%); box-shadow: 0 20px 60px rgba(0, 32, 91, 0.4); user-select: none; pointer-events: auto;"
+                                class="w-28 h-28 rounded-full flex items-center justify-center transition-all duration-300 cursor-pointer z-10 hover:scale-110 active:scale-95">
+                            <i class="fas fa-microphone text-5xl text-white"></i>
                         </button>
                         <div class="mt-4 text-center">
-                            <div class="text-lg font-semibold" x-text="isRecording ? '点击停止录音' : '点击开始录音'"></div>
-                            <div class="text-sm text-gray-500 mt-1" x-text="isRecording ? '正在收集中...' : '系统将自动识别'"></div>
+                            <div class="text-lg font-semibold">按住说话</div>
+                            <div class="text-sm text-gray-500 mt-1">松开自动AI识别</div>
                         </div>
                     </div>
 
@@ -520,6 +548,40 @@
                     </div>
 
                     <!-- AI识别结果卡片（沉浸式显示） -->
+                    <!-- 拍摄照片 -->
+                    <div class="mb-5">
+                        <label class="block text-sm font-semibold text-uibe-primary mb-3">
+                            <i class="fas fa-camera mr-2"></i>拍摄现场照片
+                            <span class="text-gray-400 font-normal text-xs ml-1">（可选，最多3张，自动添加巡检水印）</span>
+                        </label>
+                        <input type="file" x-ref="photoInput" accept="image/*" capture="environment" class="hidden" @change="handlePhotoCapture($event)">
+                        <div class="flex flex-wrap gap-3 items-end">
+                            <template x-for="(photo, idx) in capturedPhotos" :key="idx">
+                                <div class="relative rounded-xl overflow-hidden shadow-md" style="width:88px;height:88px;">
+                                    <img :src="photo.watermarked || photo.preview" class="w-full h-full object-cover">
+                                    <button @click="capturedPhotos.splice(idx,1)"
+                                            class="absolute top-1 right-1 w-6 h-6 bg-red-500 rounded-full text-white text-xs flex items-center justify-center shadow">
+                                        <i class="fas fa-times"></i>
+                                    </button>
+                                    <div x-show="photo.uploading" class="absolute inset-0 bg-black/50 flex items-center justify-center rounded-xl">
+                                        <i class="fas fa-spinner fa-spin text-white text-xl"></i>
+                                    </div>
+                                    <div x-show="photo.uploaded && !photo.uploading"
+                                         class="absolute bottom-1 left-1 bg-green-500 text-white text-xs px-1 rounded">
+                                        <i class="fas fa-check"></i>
+                                    </div>
+                                </div>
+                            </template>
+                            <button x-show="capturedPhotos.length < 3"
+                                    @click="$refs.photoInput.click()"
+                                    class="flex flex-col items-center justify-center rounded-xl border-2 border-dashed border-uibe-primary/40 hover:border-uibe-primary hover:bg-blue-50 transition-all cursor-pointer bg-gray-50"
+                                    style="width:88px;height:88px;">
+                                <i class="fas fa-plus-circle text-2xl text-uibe-primary/50 mb-1"></i>
+                                <span class="text-xs text-uibe-primary/60">拍摄</span>
+                            </button>
+                        </div>
+                    </div>
+
                     <div x-show="aiResult" x-transition:enter="transition ease-out duration-500"
                          x-transition:enter-start="opacity-0 transform translate-y-4"
                          x-transition:enter-end="opacity-100 transform translate-y-0"
@@ -1520,37 +1582,62 @@
     </div>
 
     <!-- 底部导航（巡检员使用，管理员不显示） -->
-    <template x-if="isAuthenticated && !isAdmin">
-        <div class="uibe-bottom-nav px-4 py-3 animate-bounce z-50">
-            <div class="flex items-center gap-6">
-                <button @click="navigateTo('inspector-home')"
-                        :class="currentPage === 'inspector-home' ? 'text-uibe-primary font-bold' : 'text-gray-500'"
-                        class="flex flex-col items-center px-3 py-1 cursor-pointer">
-                    <i class="fas fa-home text-xl mb-1"></i>
-                    <span class="text-xs">工作台</span>
-                </button>
-                <button @click="navigateTo('inspector-records')"
-                        :class="currentPage === 'inspector-records' ? 'text-uibe-primary font-bold' : 'text-gray-500'"
-                        class="flex flex-col items-center px-3 py-1 cursor-pointer">
-                    <i class="fas fa-clipboard-list text-xl mb-1"></i>
-                    <span class="text-xs">巡查记录</span>
-                </button>
-                <button @click="navigateTo('inspector-hazards')"
-                        :class="currentPage === 'inspector-hazards' ? 'text-uibe-primary font-bold' : 'text-gray-500'"
-                        class="flex flex-col items-center px-3 py-1 cursor-pointer">
-                    <i class="fas fa-exclamation-triangle text-xl mb-1"></i>
-                    <span class="text-xs">隐患</span>
-                </button>
-                <button @click="logout()"
-                        class="flex flex-col items-center px-3 py-1 cursor-pointer text-red-500 hover:text-red-700">
-                    <i class="fas fa-sign-out-alt text-xl mb-1"></i>
-                    <span class="text-xs">退出登录</span>
-                </button>
-            </div>
-        </div>
-    </template>
     
+    <!-- 全屏录音界面 -->
+    <div x-show="isRecording" x-cloak
+         class="recording-overlay fixed inset-0 z-[999] flex flex-col items-center justify-center p-8 select-none"
+         style="touch-action: none;">
+        <div class="text-white text-3xl font-bold mb-1 tracking-wide">
+            <i class="fas fa-microphone mr-3 animate-pulse"></i>正在录音
+        </div>
+        <p class="text-white/60 text-sm mb-10">松开按钮结束，自动AI识别</p>
+
+        <!-- 音频波形动画 -->
+        <div class="flex items-end gap-1 mb-10" style="height:60px;">
+            <div class="wave-bar" style="animation-delay:0s"></div>
+            <div class="wave-bar" style="animation-delay:0.05s"></div>
+            <div class="wave-bar" style="animation-delay:0.10s"></div>
+            <div class="wave-bar" style="animation-delay:0.15s"></div>
+            <div class="wave-bar" style="animation-delay:0.20s"></div>
+            <div class="wave-bar" style="animation-delay:0.25s"></div>
+            <div class="wave-bar" style="animation-delay:0.30s"></div>
+            <div class="wave-bar" style="animation-delay:0.35s"></div>
+            <div class="wave-bar" style="animation-delay:0.40s"></div>
+            <div class="wave-bar" style="animation-delay:0.45s"></div>
+            <div class="wave-bar" style="animation-delay:0.50s"></div>
+            <div class="wave-bar" style="animation-delay:0.55s"></div>
+            <div class="wave-bar" style="animation-delay:0.35s"></div>
+            <div class="wave-bar" style="animation-delay:0.25s"></div>
+            <div class="wave-bar" style="animation-delay:0.15s"></div>
+            <div class="wave-bar" style="animation-delay:0.05s"></div>
+        </div>
+
+        <!-- 即时识别文字 -->
+        <div class="w-full max-w-md bg-white/10 backdrop-blur rounded-2xl p-6 text-center border border-white/20">
+            <div class="text-white/50 text-xs mb-2 tracking-wide">即时识别文字</div>
+            <div class="text-white text-lg font-medium min-h-[3rem] leading-relaxed"
+                 x-text="liveTranscript || '请开始说话…'"></div>
+        </div>
+
+        <p class="text-white/40 text-xs mt-8">
+            <i class="fas fa-hand-pointer mr-1"></i>松开手指 / 鼠标完成录入
+        </p>
+    </div>
+
     <script>
+        // ─── Supabase 配置 ─────────────────────────────────
+        // 替换为你的 Supabase 项目 URL 和 anon key
+        const SUPABASE_URL  = 'YOUR_SUPABASE_URL';
+        const SUPABASE_KEY  = 'YOUR_SUPABASE_ANON_KEY';
+        const SUPABASE_BUCKET = 'inspection-photos';
+        let supabaseClient = null;
+        try {
+            if (SUPABASE_URL !== 'YOUR_SUPABASE_URL') {
+                supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+            }
+        } catch(e) { console.warn('Supabase init skipped:', e); }
+        // ──────────────────────────────────────────────────
+
         // 应用状态管理
         document.addEventListener('alpine:init', () => {
             Alpine.data('appState', () => ({
@@ -1632,6 +1719,13 @@
                 // 语音识别相关
                 recognition: null,
                 isRecognitionSupported: true,
+
+                                // 按住录音相关
+                                liveTranscript: '',
+                                audioStream: null,
+
+                                // 拍摄照片
+                                capturedPhotos: [],
                 
                 hazards: [
                     { id: 1, campus: '望京校区', location: '诚信楼', issue: '消防通道阻塞', riskLevel: 'high', status: 'pending', assignedTo: '张保卫' },
@@ -1644,18 +1738,18 @@
                 
                 // 校园定位点数据 - 管理员维护
                 campusLocations: [
-                    { id: 1, campus: '望京校区', type: '教学楼', location: '诚信楼', buildingCode: 'CX', priority: 'high', status: 'active' },
-                    { id: 2, campus: '望京校区', type: '教学楼', location: '宁远楼', buildingCode: 'NY', priority: 'high', status: 'active' },
-                    { id: 3, campus: '望京校区', type: '学生宿舍', location: '虹远楼', buildingCode: 'HY', priority: 'high', status: 'active' },
-                    { id: 4, campus: '和平里校区', type: '学生宿舍', location: '汇德公寓', buildingCode: 'HD', priority: 'high', status: 'active' },
-                    { id: 5, campus: '望京校区', type: '办公楼', location: '博学楼', buildingCode: 'BX', priority: 'medium', status: 'active' },
-                    { id: 6, campus: '望京校区', type: '图书馆', location: '图书馆', buildingCode: 'LIB', priority: 'medium', status: 'active' },
-                    { id: 7, campus: '望京校区', type: '实验楼', location: '科研楼', buildingCode: 'KY', priority: 'medium', status: 'active' },
-                    { id: 8, campus: '望京校区', type: '食堂', location: '第一食堂', buildingCode: 'C1', priority: 'low', status: 'active' },
-                    { id: 9, campus: '望京校区', type: '食堂', location: '第二食堂', buildingCode: 'C2', priority: 'low', status: 'active' },
-                    { id: 10, campus: '和平里校区', type: '教学楼', location: '教学主楼', buildingCode: 'JM', priority: 'high', status: 'active' },
-                    { id: 11, campus: '和平里校区', type: '实验楼', location: '实验大楼', buildingCode: 'SY', priority: 'medium', status: 'active' },
-                    { id: 12, campus: '望京校区', type: '体育场馆', location: '体育馆', buildingCode: 'GYM', priority: 'low', status: 'active' }
+                    { id: 1,  campus: '望京校区',  type: '教学楼',   location: '诚信楼',  buildingCode: 'CX',  priority: 'high',   status: 'active', lat: 39.9924, lng: 116.4797, radius: 120 },
+                    { id: 2,  campus: '望京校区',  type: '教学楼',   location: '宁远楼',  buildingCode: 'NY',  priority: 'high',   status: 'active', lat: 39.9918, lng: 116.4803, radius: 120 },
+                    { id: 3,  campus: '望京校区',  type: '学生宿舍', location: '虹远楼',  buildingCode: 'HY',  priority: 'high',   status: 'active', lat: 39.9930, lng: 116.4790, radius: 120 },
+                    { id: 4,  campus: '和平里校区', type: '学生宿舍', location: '汇德公寓', buildingCode: 'HD',  priority: 'high',   status: 'active', lat: 39.9508, lng: 116.4230, radius: 150 },
+                    { id: 5,  campus: '望京校区',  type: '办公楼',   location: '博学楼',  buildingCode: 'BX',  priority: 'medium', status: 'active', lat: 39.9920, lng: 116.4810, radius: 120 },
+                    { id: 6,  campus: '望京校区',  type: '图书馆',   location: '图书馆',  buildingCode: 'LIB', priority: 'medium', status: 'active', lat: 39.9908, lng: 116.4795, radius: 130 },
+                    { id: 7,  campus: '望京校区',  type: '实验楼',   location: '科研楼',  buildingCode: 'KY',  priority: 'medium', status: 'active', lat: 39.9935, lng: 116.4800, radius: 120 },
+                    { id: 8,  campus: '望京校区',  type: '食堂',     location: '第一食堂', buildingCode: 'C1',  priority: 'low',    status: 'active', lat: 39.9912, lng: 116.4785, radius: 100 },
+                    { id: 9,  campus: '望京校区',  type: '食堂',     location: '第二食堂', buildingCode: 'C2',  priority: 'low',    status: 'active', lat: 39.9916, lng: 116.4782, radius: 100 },
+                    { id: 10, campus: '和平里校区', type: '教学楼',   location: '教学主楼', buildingCode: 'JM',  priority: 'high',   status: 'active', lat: 39.9515, lng: 116.4238, radius: 150 },
+                    { id: 11, campus: '和平里校区', type: '实验楼',   location: '实验大楼', buildingCode: 'SY',  priority: 'medium', status: 'active', lat: 39.9502, lng: 116.4242, radius: 150 },
+                    { id: 12, campus: '望京校区',  type: '体育场馆', location: '体育馆',  buildingCode: 'GYM', priority: 'low',    status: 'active', lat: 39.9940, lng: 116.4810, radius: 150 }
                 ],
                 
                 // 定位验证数据
@@ -1876,7 +1970,8 @@
                         issue: this.aiResult.result === '异常' ? this.aiResult.issue : '设备设施运行正常',
                         severity: this.aiResult.severity,
                         inspector: this.currentUser?.name || '巡检员',
-                        verified: this.locationVerified
+                        verified: this.locationVerified,
+                        photos: this.capturedPhotos.map(p => p.url || p.watermarked || p.preview)
                     };
 
                     // 保存到个人记录
@@ -1893,6 +1988,7 @@
                     this.aiResult = null;
                     this.wordCount = 0;
                     this.isRecording = false;
+                    this.capturedPhotos = [];
                     this.currentPage = 'inspector-home';
 
                     console.log('巡检记录已保存:', record);
@@ -1904,7 +2000,6 @@
                     if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
                         this.isRecognitionSupported = false;
                         console.warn('当前浏览器不支持语音识别API');
-                        alert('您的浏览器不支持语音识别功能，请使用Chrome或Edge浏览器，或直接手动输入。');
                         return;
                     }
 
@@ -1912,7 +2007,7 @@
 
                     this.recognition = new SpeechRecognition();
                     this.recognition.lang = 'zh-CN';
-                    this.recognition.continuous = false;
+                        this.recognition.continuous = true;
                     this.recognition.interimResults = true;
 
                     // 识别结果回调
@@ -1930,25 +2025,21 @@
                         }
 
                         if (finalTranscript) {
-                            this.aiInput = finalTranscript;
+                                this.aiInput += finalTranscript;
                             this.updateWordCount();
-                            console.log('语音识别结果:', finalTranscript);
+                            }
+                            // 实时显示中间结果
+                            if (interimTranscript) {
+                                this.liveTranscript = this.aiInput + interimTranscript;
+                            } else if (finalTranscript) {
+                                this.liveTranscript = this.aiInput;
                         }
                     };
 
                     // 识别结束回调
                     this.recognition.onend = () => {
                         if (this.isRecording) {
-                            // 如果还在录音状态，说明识别结束了，停止录音
                             this.isRecording = false;
-                            console.log('录音结束');
-
-                            // 自动进行AI分析
-                            if (this.aiInput.trim()) {
-                                setTimeout(() => {
-                                    this.simulateAIProcessing();
-                                }, 300);
-                            }
                         }
                     };
 
@@ -1984,39 +2075,36 @@
                 },
 
                 toggleVoiceInput() {
-                    console.log('toggleVoiceInput 被调用，isRecording:', this.isRecording);
+                    // legacy stub — replaced by startVoiceRecording / stopVoiceRecording
+                },
 
-                    if (!this.featureFlags.voiceInput) {
-                        alert('语音输入功能已被管理员关闭，请联系系统管理员。');
-                        return;
+                startVoiceRecording() {
+                    if (!this.featureFlags.voiceInput) { alert('语音输入功能已被管理员关闭'); return; }
+                    if (!this.isRecognitionSupported) { alert('您的浏览器不支持语音识别，请使用Chrome/Edge或手动输入'); return; }
+                    if (this.isRecording) return;
+
+                    this.aiResult = null;
+                    this.aiInput = '';
+                    this.liveTranscript = '';
+                    this.isRecording = true;
+
+                    try {
+                        this.recognition.start();
+                    } catch (e) {
+                        console.warn('recognition.start error:', e);
+                        // already started — ignore
                     }
+                },
 
-                    if (!this.isRecognitionSupported) {
-                        alert('您的浏览器不支持语音识别，请手动输入。');
-                        return;
-                    }
-
-                    if (this.isRecording) {
-                        // 停止录音
-                        this.isRecording = false;
-                        this.recognition.stop();
-                        console.log('停止录音');
-                    } else {
-                        // 清空之前的分析结果
-                        this.aiResult = null;
-                        this.aiInput = '';
-
-                        // 开始录音
-                        this.isRecording = true;
-                        try {
-                            this.recognition.start();
-                            console.log('开始录音');
-                        } catch (error) {
-                            console.error('启动语音识别失败:', error);
-                            this.isRecording = false;
-                            alert('启动语音识别失败，请检查麦克风权限');
-                        }
-                    }
+                stopVoiceRecording() {
+                    if (!this.isRecording) return;
+                    this.isRecording = false;
+                    this.liveTranscript = '';
+                    try { this.recognition.stop(); } catch(e) {}
+                    // run AI analysis after a short delay
+                    setTimeout(() => {
+                        if (this.aiInput.trim()) this.simulateAIProcessing();
+                    }, 350);
                 },
                 
                 updateWordCount() {
@@ -2026,6 +2114,112 @@
                         this.wordCount = 0;
                     }
                 },
+
+                // ── 照片处理（水印 + Supabase上传）──────────────────────
+                handlePhotoCapture(event) {
+                    const file = event.target.files[0];
+                    if (!file) return;
+                    // reset input so same file can be re-selected
+                    event.target.value = '';
+
+                    const reader = new FileReader();
+                    reader.onload = (e) => {
+                        const photoEntry = { preview: e.target.result, watermarked: null, uploading: false, uploaded: false, url: null };
+                        this.capturedPhotos.push(photoEntry);
+                        const idx = this.capturedPhotos.length - 1;
+                        this._stampWatermark(photoEntry, file, idx);
+                    };
+                    reader.readAsDataURL(file);
+                },
+
+                _stampWatermark(photoEntry, file, idx) {
+                    const img = new Image();
+                    img.onload = () => {
+                        const canvas = document.createElement('canvas');
+                        canvas.width  = img.naturalWidth;
+                        canvas.height = img.naturalHeight;
+                        const ctx = canvas.getContext('2d');
+                        ctx.drawImage(img, 0, 0);
+
+                        // Watermark panel dimensions
+                        const W = canvas.width;
+                        const H = canvas.height;
+                        const panelH = Math.round(H * 0.22);
+                        const panelY = H - panelH;
+                        const pad    = Math.round(W * 0.03);
+
+                        // Semi-transparent blue panel
+                        ctx.fillStyle = 'rgba(0, 32, 91, 0.78)';
+                        ctx.fillRect(0, panelY, W, panelH);
+
+                        // White accent bar on left
+                        ctx.fillStyle = '#FFB81C';
+                        ctx.fillRect(0, panelY, Math.round(W * 0.012), panelH);
+
+                        const fs = Math.round(W * 0.038);
+                        ctx.font = `bold ${fs}px "Noto Sans SC", sans-serif`;
+                        ctx.fillStyle = '#FFFFFF';
+                        ctx.textBaseline = 'top';
+
+                        const now = new Date();
+                        const dateStr = now.toLocaleDateString('zh-CN', { year:'numeric', month:'2-digit', day:'2-digit' });
+                        const timeStr = now.toLocaleTimeString('zh-CN', { hour:'2-digit', minute:'2-digit' });
+                        const locStr  = this.aiResult?.location || '--';
+                        const campStr = this.aiResult?.campus   || '--';
+                        const uname   = this.currentUser?.name  || '--';
+                        const typeStr = '消防巡逻';
+
+                        const lineH = panelH / 4.2;
+                        ctx.font = `bold ${Math.round(fs*1.05)}px "Noto Sans SC", sans-serif`;
+                        ctx.fillText(`⊙ ${typeStr}`, pad, panelY + lineH * 0.3);
+
+                        ctx.font = `${Math.round(fs*0.82)}px "Noto Sans SC", sans-serif`;
+                        ctx.fillStyle = '#E0E8FF';
+                        ctx.fillText(`${dateStr}  ${timeStr}`, W - pad - ctx.measureText(`${dateStr}  ${timeStr}`).width, panelY + lineH * 0.35);
+
+                        ctx.font = `${Math.round(fs*0.88)}px "Noto Sans SC", sans-serif`;
+                        ctx.fillStyle = '#FFFFFF';
+                        ctx.fillText(`地  点：${campStr} · ${locStr}`, pad, panelY + lineH * 1.3);
+
+                        ctx.fillStyle = '#B0C4F0';
+                        ctx.fillText(`巡检员：${uname}`, pad, panelY + lineH * 2.3);
+
+                        const typeLabel = this.aiResult?.result === '异常' ? `隐患：${this.aiResult.issue}` : '巡检内容：一切正常';
+                        ctx.fillText(typeLabel, pad, panelY + lineH * 3.2);
+
+                        canvas.toBlob((blob) => {
+                            const dataURL = canvas.toDataURL('image/jpeg', 0.88);
+                            this.capturedPhotos[idx].watermarked = dataURL;
+                            this._uploadPhotoToSupabase(blob, idx);
+                        }, 'image/jpeg', 0.88);
+                    };
+                    img.src = photoEntry.preview;
+                },
+
+                async _uploadPhotoToSupabase(blob, idx) {
+                    if (!supabaseClient) {
+                        console.warn('Supabase 未配置，照片仅本地保存');
+                        return;
+                    }
+                    const entry = this.capturedPhotos[idx];
+                    entry.uploading = true;
+
+                    const fileName = `inspections/${Date.now()}_${Math.random().toString(36).slice(2)}.jpg`;
+                    const { data, error } = await supabaseClient.storage
+                        .from(SUPABASE_BUCKET)
+                        .upload(fileName, blob, { contentType: 'image/jpeg', upsert: false });
+
+                    entry.uploading = false;
+                    if (error) {
+                        console.error('Supabase 上传失败:', error.message);
+                        return;
+                    }
+                    const { data: pub } = supabaseClient.storage.from(SUPABASE_BUCKET).getPublicUrl(fileName);
+                    entry.url = pub?.publicUrl || null;
+                    entry.uploaded = true;
+                    console.log('照片上传成功:', entry.url);
+                },
+                // ─────────────────────────────────────────────────────────
                 
                 // 地点管理方法
                 toggleLocationStatus(locationId) {
@@ -2092,37 +2286,64 @@
                     alert(`新地点已添加成功：\n\n地点：${newLocation.location}\n校区：${newLocation.campus}\n类型：${newLocation.type}\n优先级：${priority}`);
                 },
                 
-                // 位置验证方法
+                // 位置验证方法（真实GPS）
                 verifyLocation() {
                     if (!this.aiResult) {
                         alert('没有可验证的位置信息');
                         return;
                     }
 
-                    // 模拟位置验证逻辑
-                    // 在实际应用中，这里会调用浏览器的地理定位API
-                    const location = this.campusLocations.find(l => l.location === this.aiResult.location);
+                    const preset = this.campusLocations.find(
+                        l => l.location === this.aiResult.location && l.status === 'active'
+                    );
 
-                    if (!location) {
+                    if (!preset) {
                         this.locationMatchStatus = 'mismatched';
                         this.locationVerified = false;
-                        alert('位置验证失败：该地点不在系统预设定位点中');
+                        alert('位置验证失败：该地点不在系统预设定位点中，或已被管理员禁用');
                         return;
                     }
 
-                    // 模拟位置匹配逻辑（演示系统总是匹配成功）
-                    // 在真实应用中，这里会比较GPS坐标
-                    const isMatch = Math.random() > 0.1; // 90%概率匹配成功，模拟真实情况
-
-                    if (isMatch) {
-                        this.locationMatchStatus = 'matched';
-                        this.locationVerified = true;
-                        alert(`位置验证成功！\n\n口述地点：${this.aiResult.location}\n实际位置：${location.location}\n校区：${location.campus}\n\n可以继续提交巡检记录`);
-                    } else {
-                        this.locationMatchStatus = 'mismatched';
-                        this.locationVerified = false;
-                        alert(`位置验证失败！\n\n口述地点：${this.aiResult.location}\n您的实际位置不匹配\n\n请确认您当前的实际位置`);
+                    if (!navigator.geolocation) {
+                        alert('您的浏览器不支持GPS定位，无法完成位置验证');
+                        return;
                     }
+
+                    this.locationMatchStatus = 'pending';
+                    navigator.geolocation.getCurrentPosition(
+                        (pos) => {
+                            const userLat = pos.coords.latitude;
+                            const userLng = pos.coords.longitude;
+                            const dist = this._haversineMeters(userLat, userLng, preset.lat, preset.lng);
+                            console.log(`GPS距离: ${Math.round(dist)}m, 允许范围: ${preset.radius}m`);
+
+                            if (dist <= preset.radius) {
+                                this.locationMatchStatus = 'matched';
+                                this.locationVerified = true;
+                                alert(`✅ 位置验证成功！\n\n口述地点：${preset.location}（${preset.campus}）\n您的实际位置距目标：${Math.round(dist)} 米\n允许范围：${preset.radius} 米\n\n可以继续提交巡检记录`);
+                            } else {
+                                this.locationMatchStatus = 'mismatched';
+                                this.locationVerified = false;
+                                alert(`❌ 位置不匹配！\n\n口述地点：${preset.location}（${preset.campus}）\n您的实际位置距目标：${Math.round(dist)} 米\n允许范围：${preset.radius} 米\n\n请先到达巡检位置再录入。`);
+                            }
+                        },
+                        (err) => {
+                            console.error('GPS错误:', err);
+                            alert('无法获取GPS位置，请检查定位权限设置');
+                        },
+                        { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+                    );
+                },
+
+                // Haversine 公式：计算两 GPS 坐标之间的米数
+                _haversineMeters(lat1, lon1, lat2, lon2) {
+                    const R = 6371000;
+                    const dLat = (lat2 - lat1) * Math.PI / 180;
+                    const dLon = (lon2 - lon1) * Math.PI / 180;
+                    const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+                              Math.cos(lat1 * Math.PI/180) * Math.cos(lat2 * Math.PI/180) *
+                              Math.sin(dLon/2) * Math.sin(dLon/2);
+                    return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
                 },
 
                 // 地点筛选方法
