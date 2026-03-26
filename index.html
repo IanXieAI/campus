@@ -495,11 +495,9 @@
 
                     <!-- 圆形录音按钮 -->
                     <div class="flex flex-col items-center justify-center mb-6">
-                        <button @mousedown.prevent="startVoiceRecording()"
-                                @touchstart.prevent="startVoiceRecording()"
-                                @mouseup="stopVoiceRecording()"
-                                @touchend="stopVoiceRecording()"
-                                @mouseleave="if(isRecording) stopVoiceRecording()"
+                        <button @pointerdown.prevent="startVoiceRecording($event)"
+                            @pointerup="stopVoiceRecording()"
+                            @pointercancel="stopVoiceRecording()"
                                 style="background: linear-gradient(135deg, #00205B 0%, #003D8F 100%); box-shadow: 0 20px 60px rgba(0, 32, 91, 0.4); user-select: none; pointer-events: auto;"
                                 class="w-28 h-28 rounded-full flex items-center justify-center transition-all duration-300 cursor-pointer z-10 hover:scale-110 active:scale-95">
                             <i class="fas fa-microphone text-5xl text-white"></i>
@@ -545,6 +543,14 @@
                                 重新录制
                             </button>
                         </div>
+                        <button @click="simulateAIProcessing()"
+                                :disabled="!aiInput.trim()"
+                                :class="!aiInput.trim() ? 'bg-gray-300 cursor-not-allowed' : 'hover:opacity-90'"
+                                class="mt-4 w-full py-4 text-white font-semibold rounded-xl transition-all"
+                                style="background: linear-gradient(135deg, #00205B 0%, #003D8F 100%);">
+                            <i class="fas fa-wand-magic-sparkles mr-2"></i>
+                            智能识别并进入下一步
+                        </button>
                     </div>
 
                     <!-- AI识别结果卡片（沉浸式显示） -->
@@ -2038,9 +2044,7 @@
 
                     // 识别结束回调
                     this.recognition.onend = () => {
-                        if (this.isRecording) {
-                            this.isRecording = false;
-                        }
+                        console.log('语音识别已结束');
                     };
 
                     // 错误处理
@@ -2078,7 +2082,7 @@
                     // legacy stub — replaced by startVoiceRecording / stopVoiceRecording
                 },
 
-                startVoiceRecording() {
+                startVoiceRecording(event) {
                     if (!this.featureFlags.voiceInput) { alert('语音输入功能已被管理员关闭'); return; }
                     if (!this.isRecognitionSupported) { alert('您的浏览器不支持语音识别，请使用Chrome/Edge或手动输入'); return; }
                     if (this.isRecording) return;
@@ -2087,6 +2091,10 @@
                     this.aiInput = '';
                     this.liveTranscript = '';
                     this.isRecording = true;
+
+                    if (event?.currentTarget?.setPointerCapture && event.pointerId !== undefined) {
+                        try { event.currentTarget.setPointerCapture(event.pointerId); } catch (e) {}
+                    }
 
                     try {
                         this.recognition.start();
@@ -2099,10 +2107,10 @@
                 stopVoiceRecording() {
                     if (!this.isRecording) return;
                     this.isRecording = false;
-                    this.liveTranscript = '';
                     try { this.recognition.stop(); } catch(e) {}
                     // run AI analysis after a short delay
                     setTimeout(() => {
+                        this.liveTranscript = '';
                         if (this.aiInput.trim()) this.simulateAIProcessing();
                     }, 350);
                 },
