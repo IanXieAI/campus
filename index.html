@@ -207,6 +207,24 @@
         }
         /* photo thumbnail */
         .photo-thumb { width: 80px; height: 80px; object-fit: cover; border-radius: 12px; }
+
+        .coord-panel {
+            background: linear-gradient(135deg, rgba(0,32,91,0.04), rgba(0,86,179,0.08));
+            border: 1px solid rgba(0, 32, 91, 0.12);
+            border-radius: 16px;
+        }
+
+        .coord-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 10px;
+            border-radius: 999px;
+            background: rgba(255,255,255,0.8);
+            border: 1px solid rgba(0,32,91,0.08);
+            font-size: 12px;
+            color: #334155;
+        }
     </style>
 </head>
 <body x-data="appState" x-init="init()" class="uibe-page-transition">
@@ -946,6 +964,41 @@
                     <i class="fas fa-plus mr-2"></i>添加新的巡查地点
                 </button>
             </div>
+
+            <div class="uibe-card p-6 mb-6">
+                <div class="flex items-center justify-between mb-4">
+                    <div>
+                        <h3 class="font-bold text-uibe-primary text-lg">
+                            <i class="fas fa-crosshairs mr-2"></i>点位校准面板
+                        </h3>
+                        <p class="text-sm text-gray-500">用于查看当前实时坐标，并将其写入某个巡查点位</p>
+                    </div>
+                    <button @click="refreshAdminCurrentPosition()"
+                            class="px-4 py-2 bg-uibe-primary hover:bg-blue-800 text-white rounded-xl text-sm font-semibold transition-colors cursor-pointer">
+                        <i class="fas fa-location-crosshairs mr-2"></i>获取当前位置
+                    </button>
+                </div>
+
+                <div class="coord-panel p-4">
+                    <div class="flex flex-wrap gap-3 mb-3">
+                        <div class="coord-chip">
+                            <i class="fas fa-location-dot text-red-500"></i>
+                            纬度：<span class="font-mono" x-text="adminLivePosition ? adminLivePosition.lat : '--'"></span>
+                        </div>
+                        <div class="coord-chip">
+                            <i class="fas fa-location-dot text-blue-500"></i>
+                            经度：<span class="font-mono" x-text="adminLivePosition ? adminLivePosition.lng : '--'"></span>
+                        </div>
+                        <div class="coord-chip">
+                            <i class="fas fa-circle-info text-green-500"></i>
+                            精度：<span class="font-mono" x-text="adminLivePosition ? Math.round(adminLivePosition.accuracy) + 'm' : '--'"></span>
+                        </div>
+                    </div>
+                    <div class="text-xs text-gray-500">
+                        当前页面中的点位编辑和“十字准星”修正会保存到浏览器本地存储，刷新后仍保留。
+                    </div>
+                </div>
+            </div>
             
             <!-- 传递给巡检员提示 -->
             <div class="uibe-card p-6">
@@ -1662,6 +1715,11 @@
                         const storedUser = localStorage.getItem('uibe_currentUser');
                         this.currentUser = storedUser ? JSON.parse(storedUser) : null;
                         this.isAdmin = localStorage.getItem('uibe_isAdmin') === 'true';
+
+                        const savedLocations = localStorage.getItem('uibe_campus_locations');
+                        if (savedLocations) {
+                            this.campusLocations = JSON.parse(savedLocations);
+                        }
                     } catch (e) {
                         console.error('初始化失败:', e);
                     }
@@ -1769,6 +1827,7 @@
                 currentLocation: null,
                 locationVerified: false,
                 locationMatchStatus: 'pending', // pending, matched, mismatched
+                adminLivePosition: null,
 
                 // 地点筛选器
                 locationFilter: 'all',
@@ -2246,6 +2305,7 @@
                     
                     if (confirm(`确定要${statusText}地点"${location.location}"吗？\n\n${newStatus === 'active' ? '启用后巡检员将需要巡检该地点' : '禁用后巡检员将无需巡检该地点'}`)) {
                         location.status = newStatus;
+                        this.persistCampusLocations();
                         alert(`地点"${location.location}"已${statusText}`);
                     }
                 },
@@ -2288,6 +2348,7 @@
                     location.lat = parsedLat;
                     location.lng = parsedLng;
                     location.radius = parsedRadius;
+                    this.persistCampusLocations();
                     this.filterLocations();
                     alert(`巡查点位已更新：\n\n地点：${location.location}\n纬度：${location.lat}\n经度：${location.lng}\n允许范围：${location.radius} 米`);
                 },
@@ -2308,6 +2369,12 @@
                             if (!location.radius) {
                                 location.radius = 120;
                             }
+                            this.adminLivePosition = {
+                                lat: location.lat,
+                                lng: location.lng,
+                                accuracy: pos.coords.accuracy || 0
+                            };
+                            this.persistCampusLocations();
                             this.filterLocations();
                             alert(`已使用当前实时位置修正坐标：\n\n地点：${location.location}\n纬度：${location.lat}\n经度：${location.lng}\n建议允许范围：${location.radius} 米`);
                         },
@@ -2358,7 +2425,35 @@
                     };
                     
                     this.campusLocations.push(newLocation);
+                    this.persistCampusLocations();
                     alert(`新地点已添加成功：\n\n地点：${newLocation.location}\n校区：${newLocation.campus}\n类型：${newLocation.type}\n优先级：${priority}`);
+                },
+
+                refreshAdminCurrentPosition() {
+                    if (!navigator.geolocation) {
+                        alert('当前浏览器不支持GPS定位');
+                        return;
+                    }
+
+                    navigator.geolocation.getCurrentPosition(
+                        (pos) => {
+                            this.adminLivePosition = {
+                                lat: Number(pos.coords.latitude.toFixed(6)),
+                                lng: Number(pos.coords.longitude.toFixed(6)),
+                                accuracy: pos.coords.accuracy || 0
+                            };
+                            alert(`当前实时位置已获取：\n\n纬度：${this.adminLivePosition.lat}\n经度：${this.adminLivePosition.lng}\n精度：${Math.round(this.adminLivePosition.accuracy)} 米`);
+                        },
+                        (err) => {
+                            console.error('获取管理员实时位置失败:', err);
+                            alert('无法获取当前位置，请确认浏览器已允许定位权限');
+                        },
+                        { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+                    );
+                },
+
+                persistCampusLocations() {
+                    localStorage.setItem('uibe_campus_locations', JSON.stringify(this.campusLocations));
                 },
                 
                 // 位置验证方法（真实GPS）
