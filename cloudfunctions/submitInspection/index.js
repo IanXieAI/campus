@@ -23,7 +23,12 @@ const $ = db.command.aggregate
  * @param {string} event.severity - 严重程度
  * @param {string} event.description - 巡查描述
  * @param {Object} event.aiAnalysis - AI分析结果
- * @param {Array} event.images - 图片URL数组
+ * @param {string} event.locationCheckStatus - 位置校验状态
+ * @param {string} event.locationWarningMessage - 位置校验警告信息
+ * @param {number} event.locationDistance - 位置距离（米）
+ * @param {boolean} event.locationWarningTriggered - 是否触发位置告警
+ * @param {boolean} event.userConfirmedLocationWarning - 是否由用户确认忽略位置告警
+ * @param {Array} event.images - 图片云文件ID数组
  * @param {string} event.audio - 语音文件URL
  * @returns {Object} 提交结果
  */
@@ -38,6 +43,11 @@ exports.main = async (event, context) => {
       campus: event.campus,
       location: event.location,
       verified: event.verified || false,
+      locationCheckStatus: event.locationCheckStatus || 'idle',
+      locationWarningMessage: event.locationWarningMessage || '',
+      locationDistance: typeof event.locationDistance === 'number' ? event.locationDistance : null,
+      locationWarningTriggered: !!event.locationWarningTriggered,
+      userConfirmedLocationWarning: !!event.userConfirmedLocationWarning,
       gpsLatitude: event.gpsLatitude || null,
       gpsLongitude: event.gpsLongitude || null,
       result: event.result || '正常',
