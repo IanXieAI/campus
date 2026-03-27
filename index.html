@@ -228,6 +228,19 @@
     </style>
 </head>
 <body x-data="appState" x-init="init()" class="uibe-page-transition">
+
+    <!-- 照片全屏预览 overlay -->
+    <div x-show="previewPhotoUrl"
+         x-cloak
+         @click="previewPhotoUrl = null"
+         class="fixed inset-0 z-[9999] flex items-center justify-center bg-black/90 cursor-pointer"
+         style="backdrop-filter:blur(4px)">
+        <img :src="previewPhotoUrl" class="max-w-full max-h-full object-contain rounded-xl shadow-2xl" @click.stop>
+        <button @click="previewPhotoUrl = null"
+                class="absolute top-4 right-4 w-10 h-10 flex items-center justify-center rounded-full bg-white/20 hover:bg-white/40 text-white text-xl">
+            <i class="fas fa-times"></i>
+        </button>
+    </div>
     
     <!-- 固定顶部栏已移动到登录页面下方 -->
     
@@ -561,13 +574,14 @@
                                 重新录制
                             </button>
                         </div>
-                        <button @click="simulateAIProcessing()"
+                        <button x-show="!aiResult"
+                                @click="simulateAIProcessing()"
                                 :disabled="!aiInput.trim()"
                                 :class="!aiInput.trim() ? 'bg-gray-300 cursor-not-allowed' : 'hover:opacity-90'"
                                 class="mt-4 w-full py-4 text-white font-semibold rounded-xl transition-all"
                                 style="background: linear-gradient(135deg, #00205B 0%, #003D8F 100%);">
                             <i class="fas fa-wand-magic-sparkles mr-2"></i>
-                            智能识别并进入下一步
+                            智能识别
                         </button>
                     </div>
 
@@ -582,8 +596,11 @@
                         <div class="flex flex-wrap gap-3 items-end">
                             <template x-for="(photo, idx) in capturedPhotos" :key="idx">
                                 <div class="relative rounded-xl overflow-hidden shadow-md" style="width:88px;height:88px;">
-                                    <img :src="photo.watermarked || photo.preview" class="w-full h-full object-cover">
-                                    <button @click="capturedPhotos.splice(idx,1)"
+                                    <img :src="photo.watermarked || photo.preview"
+                                         class="w-full h-full object-cover cursor-pointer"
+                                         @click="previewPhotoUrl = photo.watermarked || photo.preview"
+                                         title="点击查看大图">
+                                    <button @click.stop="capturedPhotos.splice(idx,1)"
                                             class="absolute top-1 right-1 w-6 h-6 bg-red-500 rounded-full text-white text-xs flex items-center justify-center shadow">
                                         <i class="fas fa-times"></i>
                                     </button>
@@ -683,12 +700,12 @@
                         </div>
 
                         <button @click="confirmInspection()"
-                                :disabled="featureFlags.locationTracking && !locationVerified"
-                                :class="featureFlags.locationTracking && !locationVerified ? 'bg-gray-400 cursor-not-allowed' : ''"
                                 class="w-full py-4 text-white font-semibold rounded-xl transition-all hover:shadow-lg transform hover:-translate-y-1"
-                                style="background: linear-gradient(135deg, #00205B 0%, #003D8F 100%);">
-                            <i class="fas fa-check-circle mr-2"></i>
-                            <span x-text="featureFlags.locationTracking ? '验证通过后确认上报' : '确认上报'"></span>
+                                :style="!featureFlags.locationTracking || locationVerified
+                                    ? 'background: linear-gradient(135deg, #00205B 0%, #003D8F 100%);'
+                                    : 'background: linear-gradient(135deg, #B45309 0%, #92400E 100%);'">
+                            <i :class="locationVerified || !featureFlags.locationTracking ? 'fas fa-check-circle mr-2' : 'fas fa-exclamation-triangle mr-2'"></i>
+                            <span x-text="!featureFlags.locationTracking ? '确认上报' : locationVerified ? '验证，立即上报' : '验证不通过，仍然上报'"></span>
                         </button>
                     </div>
                 </div>
@@ -839,11 +856,10 @@
                         </div>
                         
                         <button @click="confirmInspection()"
-                                :disabled="featureFlags.locationTracking && !locationVerified"
-                                :class="featureFlags.locationTracking && !locationVerified ? 'bg-gray-400 cursor-not-allowed' : 'bg-uibe-primary hover:bg-blue-800'"
-                                class="w-full py-5 text-white text-lg font-semibold rounded-2xl transition-colors">
-                            <i class="fas fa-check-circle mr-2"></i>
-                            <span x-text="featureFlags.locationTracking ? '验证通过后确认记录' : '确认并记录本次巡检'"></span>
+                                class="w-full py-5 text-white text-lg font-semibold rounded-2xl transition-colors"
+                                :class="!featureFlags.locationTracking || locationVerified ? 'bg-uibe-primary hover:bg-blue-800' : 'bg-amber-700 hover:bg-amber-800'">
+                            <i :class="locationVerified || !featureFlags.locationTracking ? 'fas fa-check-circle mr-2' : 'fas fa-exclamation-triangle mr-2'"></i>
+                            <span x-text="!featureFlags.locationTracking ? '确认并记录本次巡检' : locationVerified ? '验证，立即上报' : '验证不通过，仍然上报'"></span>
                         </button>
                         
                         <button @click="navigateTo('inspector-input')"
@@ -1797,6 +1813,7 @@
 
                                 // 拍摄照片
                                 capturedPhotos: [],
+                                previewPhotoUrl: null,
                 
                 hazards: [
                     { id: 1, campus: '望京校区', location: '诚信楼', issue: '消防通道阻塞', riskLevel: 'high', status: 'pending', assignedTo: '张保卫' },

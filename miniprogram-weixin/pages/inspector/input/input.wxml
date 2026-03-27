@@ -21,8 +21,11 @@
         <button class="btn-secondary action-btn" bindtap="handleVoiceInput">
           {{isRecording ? '停止录音' : '语音输入'}}
         </button>
-        <button class="btn-primary action-btn" loading="{{analyzing}}" bindtap="analyzeInput">
+        <button wx:if="{{!aiResult}}" class="btn-primary action-btn" loading="{{analyzing}}" bindtap="analyzeInput">
           智能分析
+        </button>
+        <button wx:else class="btn-secondary action-btn" bindtap="analyzeInput">
+          重新分析
         </button>
       </view>
     </view>
@@ -100,7 +103,11 @@
 
     <view class="footer-actions">
       <button class="btn-secondary footer-btn" bindtap="resetInput">重新录入</button>
-      <button class="btn-primary footer-btn" bindtap="confirmInspection">确认上报</button>
+      <button class="footer-btn confirm-btn"
+              bindtap="confirmInspection"
+              style="{{locationCheckStatus === 'passed' || locationCheckStatus === 'idle' || locationCheckStatus === 'checking' || locationCheckStatus === 'locating' ? 'background: linear-gradient(135deg, #00205B 0%, #003D8F 100%); color: #fff;' : 'background: linear-gradient(135deg, #B45309 0%, #92400E 100%); color: #fff;'}}">
+        {{locationCheckStatus === 'passed' ? '验证，立即上报' : locationCheckStatus === 'warning' || locationCheckStatus === 'unavailable' ? '验证不通过，仍然上报' : '确认上报'}}
+      </button>
     </view>
   </view>
 </view>
